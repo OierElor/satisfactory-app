@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Satisfactory — Fabrika Kudeatzailea</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-deep: #0a0c0e;
+    --bg-panel: #111418;
+    --bg-card: #161b21;
+    --bg-hover: #1e252e;
+    --border: #2a3340;
+    --border-bright: #3d5068;
+    --accent: #E8A838;
+    --accent-dim: #9B6E1E;
+    --accent-glow: rgba(232,168,56,0.15);
+    --green: #3FE88A;
+    --red: #E85555;
+    --blue: #38B4E8;
+    --text-primary: #e8edf2;
+    --text-secondary: #7a8fa0;
+    --text-muted: #3d5068;
+    --font-display: 'Rajdhani', sans-serif;
+    --font-body: 'Exo 2', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 32px; height: 32px; }
+  .logo-text { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+  .logo-sub { font-size: 11px; color: var(--text-secondary); letter-spacing: 3px; text-transform: uppercase; font-family: var(--font-mono); }
+  .header-actions { display: flex; gap: 10px; }
+
+  .btn {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    border: 1px solid var(--border-bright);
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  }
+
+  .btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #111; border-color: var(--accent); }
+  .btn-primary:hover { background: #f0b848; color: #111; }
+  .btn-danger { border-color: var(--red); color: var(--red); }
+  .btn-danger:hover { background: rgba(232,85,85,0.1); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 2rem; background: var(--bg-panel); }
+
+  .tab {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 14px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .tab:hover { color: var(--text-primary); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .main { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .factory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+
+  .factory-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+
+  .factory-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+  .factory-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+
+  .factory-header { padding: 16px 16px 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .factory-name { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 1px; line-height: 1.2; }
+  .factory-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-family: var(--font-mono); }
+  .tier-badge { font-family: var(--font-mono); font-size: 11px; padding: 3px 8px; border: 1px solid var(--border-bright); color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
+
+  .resources-section { padding: 0 16px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .res-group label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .res-group.inputs label::before { content: '▼'; color: var(--red); font-size: 8px; }
+  .res-group.outputs label::before { content: '▲'; color: var(--green); font-size: 8px; }
+
+  .res-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .res-item:last-child { border-bottom: none; }
+  .res-name { color: var(--text-secondary); font-size: 12px; }
+  .res-amount { font-family: var(--font-mono); font-size: 12px; }
+  .res-amount.input { color: var(--red); }
+  .res-amount.output { color: var(--green); }
+
+  .factory-actions { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background: var(--bg-panel); }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 2rem; }
+
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; }
+  .stat-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-value { font-family: var(--font-display); font-size: 36px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 2rem; }
+  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+
+  .chart-panel { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; }
+  .chart-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .chart-title::before { content: ''; width: 3px; height: 16px; background: var(--accent); display: inline-block; }
+
+  .mat-table-wrap { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--bg-panel); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+  tr:hover td { background: var(--bg-hover); color: var(--text-primary); }
+
+  .net-positive { color: var(--green); font-family: var(--font-mono); }
+  .net-negative { color: var(--red); font-family: var(--font-mono); }
+  .net-zero { color: var(--text-muted); font-family: var(--font-mono); }
+
+  .bar-wrap { display: flex; gap: 4px; align-items: center; }
+  .bar { height: 6px; border-radius: 3px; min-width: 2px; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg-card); border: 1px solid var(--border-bright); width: 600px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+  .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); }
+  .modal-body { padding: 24px; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 10px 12px; font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.15s; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+  .form-group select option { background: var(--bg-panel); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .res-editor-item { display: grid; grid-template-columns: 1fr 80px 90px 32px; gap: 8px; align-items: center; margin-bottom: 8px; }
+
+  .res-type-toggle { display: flex; border: 1px solid var(--border); overflow: hidden; }
+  .res-type-toggle button { flex: 1; padding: 6px 4px; font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1px; border: none; cursor: pointer; transition: all 0.15s; }
+  .res-type-toggle button.input-btn { background: transparent; color: var(--red); }
+  .res-type-toggle button.input-btn.active { background: var(--red); color: white; }
+  .res-type-toggle button.output-btn { background: transparent; color: var(--green); }
+  .res-type-toggle button.output-btn.active { background: var(--green); color: #111; }
+
+  .btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text-muted); width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .btn-icon:hover { border-color: var(--red); color: var(--red); }
+
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .section-title { font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 12px; }
+  .section-title::before { content: ''; width: 4px; height: 24px; background: var(--accent); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-family: var(--font-mono); font-size: 14px; letter-spacing: 1px; }
+  .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+  body::after { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 9999; }
+
+  .color-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-swatch { width: 28px; height: 28px; border-radius: 2px; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+  .color-swatch:hover { transform: scale(1.15); }
+  .color-swatch.selected { border-color: white; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 32 32" fill="none">
+      <rect x="4" y="4" width="24" height="24" stroke="#E8A838" stroke-width="1.5"/>
+      <rect x="8" y="8" width="16" height="16" fill="#E8A838" opacity="0.15"/>
+      <path d="M16 8 L16 24 M8 16 L24 16" stroke="#E8A838" stroke-width="1.5"/>
+      <circle cx="16" cy="16" r="3" fill="#E8A838"/>
+    </svg>
+    <div>
+      <div class="logo-text">Fabrikak</div>
+      <div class="logo-sub">Satisfactory · Kudeatzailea</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-primary" onclick="fabrikaBerriaIreki()">+ Fabrika Berria</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" onclick="ikuspegiaErakutsi('fabrikak', this)">Fabrikak</button>
+  <button class="tab" onclick="ikuspegiaErakutsi('laburpena', this)">Laburpen Orokorra</button>
+  <button class="tab" onclick="ikuspegiaErakutsi('materialak', this)">Materialak</button>
+</nav>
+
+<main class="main">
+
+  <!-- FABRIKAK -->
+  <div id="ikuspegi-fabrikak" class="view active">
+    <div class="section-header">
+      <div class="section-title">Fabrika Aktiboak</div>
+      <div id="fabrika-kopurua" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)"></div>
+    </div>
+    <div class="factory-grid" id="fabrika-sareta"></div>
+  </div>
+
+  <!-- LABURPENA -->
+  <div id="ikuspegi-laburpena" class="view">
+    <div class="section-header">
+      <div class="section-title">Laburpen Orokorra</div>
+    </div>
+
+    <div class="summary-grid" id="laburpen-estatistikak"></div>
+
+    <div class="charts-grid">
+      <div class="chart-panel">
+        <div class="chart-title">Ekoizpena Fabrikako</div>
+        <div style="position:relative;height:280px">
+          <canvas id="grafikoa-fabrikak" role="img" aria-label="Ekoizpen totala fabrikako"></canvas>
+        </div>
+      </div>
+      <div class="chart-panel">
+        <div class="chart-title">Material Ekoiztuenak</div>
+        <div style="position:relative;height:280px">
+          <canvas id="grafikoa-materialak" role="img" aria-label="Material gehien ekoitziak"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-panel">
+      <div class="chart-title">Materialen Saldo Garbia (Ekoizpena − Kontsumoa)</div>
+      <div style="position:relative;" id="grafikoa-garbia-ingurua">
+        <canvas id="grafikoa-garbia" role="img" aria-label="Materialen saldo garbia"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERIALAK -->
+  <div id="ikuspegi-materialak" class="view">
+    <div class="section-header">
+      <div class="section-title">Materialen Balantzea</div>
+    </div>
+    <div class="mat-table-wrap">
+      <table id="material-taula">
+        <thead>
+          <tr>
+            <th>Materiala</th>
+            <th>Kontsumoa</th>
+            <th>Ekoizpena</th>
+            <th>Saldo Garbia</th>
+            <th>Fluxua</th>
+          </tr>
+        </thead>
+        <tbody id="material-gorputza"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODALA -->
+<div class="modal-overlay" id="modala" onclick="modalaItxi(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-titulua">Fabrika Berria</span>
+      <button class="btn btn-sm" onclick="modalaItxi()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editatu-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fabrikaren izena</label>
+          <input type="text" id="f-izena" placeholder="Adib: Burdin Galdategia">
+        </div>
+        <div class="form-group">
+          <label>Maila / Tier</label>
+          <select id="f-maila">
+            <option value="1">1. Maila</option>
+            <option value="2">2. Maila</option>
+            <option value="3">3. Maila</option>
+            <option value="4">4. Maila</option>
+            <option value="5">5. Maila</option>
+            <option value="6">6. Maila</option>
+            <option value="7">7. Maila</option>
+            <option value="8">8. Maila</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Deskribapena (aukerazkoa)</label>
+        <input type="text" id="f-deskribapena" placeholder="Fabrikaren azalpen laburra">
+      </div>
+      <div class="form-group">
+        <label>Kolore identifikatzailea</label>
+        <div class="color-options" id="kolore-aukerak"></div>
+      </div>
+      <div class="form-group">
+        <label>Baliabideak (materialak)</label>
+        <div class="resources-editor" id="baliabideen-editorea"></div>
+        <button class="btn btn-sm" style="margin-top:8px" onclick="baliabideErrenkadaGehitu()">+ Material gehitu</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="modalaItxi()">Utzi</button>
+      <button class="btn btn-primary" onclick="fabrikaGorde()">Gorde</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+const KOLOREAK = ['#E8A838','#3FE88A','#38B4E8','#E85555','#B838E8','#38E8D4','#E83888','#E8D038','#8BE838'];
+let fabrikak = [], laburpenDatuak = [], unekoGrafikoak = {};
+
+function ikuspegiaErakutsi(izena, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('ikuspegi-' + izena).classList.add('active');
+  el.classList.add('active');
+  if (izena === 'laburpena') laburpenaErrendatu();
+  if (izena === 'materialak') materialakErrendatu();
+}
+
+async function fabrikakKargatu() {
+  const res = await fetch(API + '/api/factories');
+  fabrikak = await res.json();
+  fabrikakErrendatu();
+}
+
+async function laburpenaKargatu() {
+  const res = await fetch(API + '/api/summary');
+  laburpenDatuak = await res.json();
+}
+
+function fabrikakErrendatu() {
+  const sareta = document.getElementById('fabrika-sareta');
+  const kopurua = document.getElementById('fabrika-kopurua');
+  kopurua.textContent = fabrikak.length + ' fabrika erregistratuta';
+
+  if (!fabrikak.length) {
+    sareta.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">🏭</div><div>Ez dago fabrikarik erregistratuta.<br>"+ Fabrika Berria" sakatu lehena sortzeko</div></div>';
+    return;
+  }
+
+  sareta.innerHTML = fabrikak.map(f => `
+    <div class="factory-card">
+      <div class="factory-card-accent" style="background:${f.color}"></div>
+      <div class="factory-header">
+        <div>
+          <div class="factory-name">${f.name}</div>
+          ${f.description ? `<div class="factory-desc">${f.description}</div>` : ''}
+        </div>
+        <div class="tier-badge">${f.tier}. M</div>
+      </div>
+      <div class="resources-section">
+        <div class="res-group inputs">
+          <label>Kontsumoa</label>
+          ${f.inputs.length ? f.inputs.map(r => `
+            <div class="res-item">
+              <span class="res-name">${r.name}</span>
+              <span class="res-amount input">−${r.amount_per_min} ${r.unit}</span>
+            </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">bat ere ez</div>'}
+        </div>
+        <div class="res-group outputs">
+          <label>Ekoizpena</label>
+          ${f.outputs.length ? f.outputs.map(r => `
+            <div class="res-item">
+              <span class="res-name">${r.name}</span>
+              <span class="res-amount output">+${r.amount_per_min} ${r.unit}</span>
+            </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">bat ere ez</div>'}
+        </div>
+      </div>
+      <div class="factory-actions">
+        <button class="btn btn-sm" onclick="fabrikaEditatzeko(${f.id})">Editatu</button>
+        <button class="btn btn-sm btn-danger" onclick="fabrikaEzabatu(${f.id}, '${f.name.replace(/'/g,"\\'")}')">Ezabatu</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function laburpenaErrendatu() {
+  await laburpenaKargatu();
+
+  const ekoizpenTotal = laburpenDatuak.reduce((a, m) => a + m.total_output, 0);
+  const kontsumTotal = laburpenDatuak.reduce((a, m) => a + m.total_input, 0);
+  const materialBakanak = laburpenDatuak.length;
+
+  document.getElementById('laburpen-estatistikak').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Fabrika Aktiboak</div>
+      <div class="stat-value">${fabrikak.length}</div>
+      <div class="stat-sub">sisteman erregistratuta</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Ekoizpen Totala</div>
+      <div class="stat-value" style="color:var(--green)">${ekoizpenTotal.toFixed(0)}</div>
+      <div class="stat-sub">unitate/minutu guztira</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Kontsumo Totala</div>
+      <div class="stat-value" style="color:var(--red)">${kontsumTotal.toFixed(0)}</div>
+      <div class="stat-sub">unitate/minutu guztira</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Material Bakarrak</div>
+      <div class="stat-value" style="color:var(--blue)">${materialBakanak}</div>
+      <div class="stat-sub">zirkulazioan</div>
+    </div>
+  `;
+
+  grafikoaSuntsitu('grafikoa-fabrikak');
+  grafikoaSuntsitu('grafikoa-materialak');
+  grafikoaSuntsitu('grafikoa-garbia');
+
+  const fabrikaKoloreak = fabrikak.map(f => f.color || '#E8A838');
+  const fabrikaEkoizpenak = fabrikak.map(f => f.outputs.reduce((a, r) => a + r.amount_per_min, 0));
+
+  unekoGrafikoak['grafikoa-fabrikak'] = new Chart(document.getElementById('grafikoa-fabrikak'), {
+    type: 'doughnut',
+    data: {
+      labels: fabrikak.map(f => f.name),
+      datasets: [{ data: fabrikaEkoizpenak, backgroundColor: fabrikaKoloreak, borderColor: '#161b21', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: '#7a8fa0', font: { family: 'Share Tech Mono', size: 11 }, boxWidth: 12 } } }
+    }
+  });
+
+  const top10 = [...laburpenDatuak].sort((a, b) => b.total_output - a.total_output).slice(0, 10);
+  unekoGrafikoak['grafikoa-materialak'] = new Chart(document.getElementById('grafikoa-materialak'), {
+    type: 'bar',
+    data: {
+      labels: top10.map(m => m.name),
+      datasets: [{ label: 'Ekoizpena (un/min)', data: top10.map(m => m.total_output), backgroundColor: '#E8A838', borderRadius: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#2a3340' }, ticks: { color: '#7a8fa0', font: { family: 'Share Tech Mono', size: 10 } } },
+        y: { grid: { display: false }, ticks: { color: '#7a8fa0', font: { family: 'Share Tech Mono', size: 10 } } }
+      }
+    }
+  });
+
+  const saldoDatuak = laburpenDatuak
+    .map(m => ({ name: m.name, net: m.total_output - m.total_input }))
+    .sort((a, b) => b.net - a.net);
+
+  const ingurua = document.getElementById('grafikoa-garbia-ingurua');
+  ingurua.style.height = Math.max(300, saldoDatuak.length * 32 + 60) + 'px';
+
+  unekoGrafikoak['grafikoa-garbia'] = new Chart(document.getElementById('grafikoa-garbia'), {
+    type: 'bar',
+    data: {
+      labels: saldoDatuak.map(m => m.name),
+      datasets: [{
+        data: saldoDatuak.map(m => m.net),
+        backgroundColor: saldoDatuak.map(m => m.net > 0 ? '#3FE88A' : m.net < 0 ? '#E85555' : '#3d5068'),
+        borderRadius: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#2a3340' }, ticks: { color: '#7a8fa0', font: { family: 'Share Tech Mono', size: 10 } } },
+        y: { grid: { display: false }, ticks: { color: '#7a8fa0', font: { family: 'Share Tech Mono', size: 10 } } }
+      }
+    }
+  });
+}
+
+function grafikoaSuntsitu(id) {
+  if (unekoGrafikoak[id]) { unekoGrafikoak[id].destroy(); delete unekoGrafikoak[id]; }
+}
+
+async function materialakErrendatu() {
+  await laburpenaKargatu();
+  const balioMax = Math.max(...laburpenDatuak.map(m => Math.max(m.total_input, m.total_output)));
+  const gorputza = document.getElementById('material-gorputza');
+  gorputza.innerHTML = laburpenDatuak.map(m => {
+    const net = m.total_output - m.total_input;
+    const netKlasea = net > 0 ? 'net-positive' : net < 0 ? 'net-negative' : 'net-zero';
+    const netKatea = net > 0 ? '+' + net.toFixed(1) : net.toFixed(1);
+    const barraKontsum = Math.round((m.total_input / balioMax) * 80);
+    const barraEkoizp = Math.round((m.total_output / balioMax) * 80);
+    return `
+      <tr>
+        <td style="color:var(--text-primary);font-weight:500">${m.name}</td>
+        <td class="net-negative">${m.total_input > 0 ? m.total_input.toFixed(1) + ' ' + m.unit : '—'}</td>
+        <td class="net-positive">${m.total_output > 0 ? m.total_output.toFixed(1) + ' ' + m.unit : '—'}</td>
+        <td class="${netKlasea}">${netKatea} ${m.unit}</td>
+        <td>
+          <div class="bar-wrap">
+            <div class="bar" style="width:${barraKontsum}px;background:rgba(232,85,85,0.5)"></div>
+            <div class="bar" style="width:${barraEkoizp}px;background:rgba(63,232,138,0.5)"></div>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function fabrikaBerriaIreki() {
+  document.getElementById('editatu-id').value = '';
+  document.getElementById('modal-titulua').textContent = 'Fabrika Berria';
+  document.getElementById('f-izena').value = '';
+  document.getElementById('f-deskribapena').value = '';
+  document.getElementById('f-maila').value = '1';
+  koloreaHasieratu('#E8A838');
+  document.getElementById('baliabideen-editorea').innerHTML = '';
+  baliabideErrenkadaGehitu();
+  document.getElementById('modala').classList.add('open');
+}
+
+function fabrikaEditatzeko(id) {
+  const f = fabrikak.find(x => x.id === id);
+  document.getElementById('editatu-id').value = id;
+  document.getElementById('modal-titulua').textContent = 'Fabrika Editatu';
+  document.getElementById('f-izena').value = f.name;
+  document.getElementById('f-deskribapena').value = f.description || '';
+  document.getElementById('f-maila').value = f.tier;
+  koloreaHasieratu(f.color);
+  const ed = document.getElementById('baliabideen-editorea');
+  ed.innerHTML = '';
+  f.inputs.forEach(r => baliabideErrenkadaGehitu(r.name, r.amount_per_min, 'input'));
+  f.outputs.forEach(r => baliabideErrenkadaGehitu(r.name, r.amount_per_min, 'output'));
+  document.getElementById('modala').classList.add('open');
+}
+
+function koloreaHasieratu(hautatua) {
+  const el = document.getElementById('kolore-aukerak');
+  el.innerHTML = KOLOREAK.map(c => `
+    <div class="color-swatch ${c===hautatua?'selected':''}" style="background:${c}" onclick="koloreaHautatu('${c}', this)"></div>
+  `).join('');
+}
+
+function koloreaHautatu(kolorea, el) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function hautatukoKoloreaLortu() {
+  const s = document.querySelector('.color-swatch.selected');
+  return s ? s.style.background : '#E8A838';
+}
+
+function baliabideErrenkadaGehitu(izena='', kopurua='', mota='output') {
+  const ed = document.getElementById('baliabideen-editorea');
+  const errenkada = document.createElement('div');
+  errenkada.className = 'res-editor-item';
+  errenkada.innerHTML = `
+    <input type="text" placeholder="Material izena" value="${izena}" style="height:32px;padding:4px 8px">
+    <input type="number" placeholder="Kop." value="${kopurua}" min="0" step="0.1" style="height:32px;padding:4px 8px">
+    <div class="res-type-toggle">
+      <button class="input-btn${mota==='input'?' active':''}" onclick="motaAldatu(this,'input')">Kontsum.</button>
+      <button class="output-btn${mota==='output'?' active':''}" onclick="motaAldatu(this,'output')">Ekoizp.</button>
+    </div>
+    <button class="btn-icon" onclick="this.closest('.res-editor-item').remove()">×</button>
+  `;
+  ed.appendChild(errenkada);
+}
+
+function motaAldatu(btn, mota) {
+  const wrap = btn.closest('.res-type-toggle');
+  wrap.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function modalaItxi(event) {
+  if (!event || event.target === document.getElementById('modala')) {
+    document.getElementById('modala').classList.remove('open');
+  }
+}
+
+async function fabrikaGorde() {
+  const id = document.getElementById('editatu-id').value;
+  const izena = document.getElementById('f-izena').value.trim();
+  if (!izena) { alert('Izena nahitaezkoa da'); return; }
+
+  const errenkadak = document.querySelectorAll('.res-editor-item');
+  const baliabideak = [];
+  errenkadak.forEach(err => {
+    const sarrerak = err.querySelectorAll('input');
+    const mat = sarrerak[0].value.trim();
+    const kop = parseFloat(sarrerak[1].value);
+    const mota = err.querySelector('.active').classList.contains('input-btn') ? 'input' : 'output';
+    if (mat && !isNaN(kop) && kop > 0) baliabideak.push({ material: mat, amount: kop, type: mota });
+  });
+
+  const datuak = {
+    name: izena,
+    description: document.getElementById('f-deskribapena').value,
+    tier: parseInt(document.getElementById('f-maila').value),
+    color: hautatukoKoloreaLortu(),
+    resources: baliabideak
+  };
+
+  if (id) {
+    await fetch(API + '/api/factories/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
+  } else {
+    await fetch(API + '/api/factories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
+  }
+
+  modalaItxi();
+  await fabrikakKargatu();
+}
+
+async function fabrikaEzabatu(id, izena) {
+  if (!confirm('"' + izena + '" fabrika ezabatu nahi duzu?')) return;
+  await fetch(API + '/api/factories/' + id, { method: 'DELETE' });
+  await fabrikakKargatu();
+}
+
+fabrikakKargatu();
+</script>
+</body>
+</html>
