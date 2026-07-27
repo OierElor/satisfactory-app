@@ -110,6 +110,9 @@ Taula zehatza material guztiekin:
 | Saldo Garbia | Ekoizpena minus Kontsumoa |
 | Fluxua | Barra bisualak proportzioa ikusteko |
 
+### Segurtasun Kopiak
+Datu-basearen kopiak sortu, deskargatu, igo eta berreskuratzeko fitxa. Ikusi [Segurtasun kopiak](#segurtasun-kopiak) atala.
+
 ---
 
 ## Datu-basea
@@ -121,6 +124,26 @@ Taula zehatza material guztiekin:
 - **factory_resources** — fabrika eta materialen arteko loturak, kopuruarekin eta motarekin (input/output)
 
 Datu-basea `app.py`-rekin batera egon behar da beti.
+
+---
+
+## Segurtasun kopiak
+
+**"Segurtasun Kopiak"** fitxan datu-base osoaren kopiak kudea daitezke. Kopiak `backups/` karpetan gordetzen dira, `kopia-YYYYMMDD-HHMMSS.db` formatuan (karpeta automatikoki sortzen da).
+
+| Ekintza | Azalpena |
+|---------|----------|
+| **+ Kopia Berria** | Uneko datu-basearen kopia sortzen du (SQLite-ren backup APIarekin, koherentzia bermatuta) |
+| **Fitxategitik Igo** | Kanpoko `.db` fitxategi bat kopia gisa gehitzen du (balioztatu egiten da) |
+| **Deskargatu** | Kopia zure ordenagailura jaisten du |
+| **Berreskuratu** | Kopiaren datuak uneko datu-basean ezartzen ditu |
+| **Ezabatu** | Kopia betiko ezabatzen du |
+
+> **Garrantzitsua:** berreskuratzeak uneko datu **guztiak** ordezkatzen ditu. Aurretik `-auto` etiketadun kopia bat sortzen da automatikoki, atzera egin ahal izateko.
+
+Balioztatzea: igotako edo berreskuratutako fitxategiak SQLite datu-base oso bat izan behar du (`integrity_check`) eta hiru taulak (`factories`, `materials`, `factory_resources`) eduki behar ditu. Bestela eragiketa bertan behera geratzen da.
+
+Kopiak eskuz ere kudea daitezke — `backups/` karpetako fitxategiak beste disko batera kopiatzea nahikoa da.
 
 ---
 

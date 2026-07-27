@@ -243,6 +243,7 @@
   <button class="tab active" onclick="ikuspegiaErakutsi('fabrikak', this)">Fabrikak</button>
   <button class="tab" onclick="ikuspegiaErakutsi('laburpena', this)">Laburpen Orokorra</button>
   <button class="tab" onclick="ikuspegiaErakutsi('materialak', this)">Materialak</button>
+  <button class="tab" onclick="ikuspegiaErakutsi('kopiak', this)">Segurtasun Kopiak</button>
 </nav>
 
 <main class="main">
@@ -304,6 +305,36 @@
           </tr>
         </thead>
         <tbody id="material-gorputza"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SEGURTASUN KOPIAK -->
+  <div id="ikuspegi-kopiak" class="view">
+    <div class="section-header">
+      <div class="section-title">Segurtasun Kopiak</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn" onclick="document.getElementById('kopia-fitxategia').click()">Fitxategitik Igo</button>
+        <button class="btn btn-primary" onclick="kopiaSortu()">+ Kopia Berria</button>
+      </div>
+    </div>
+    <input type="file" id="kopia-fitxategia" accept=".db,.sqlite,.sqlite3" style="display:none" onchange="kopiaIgo(this)">
+
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;font-family:var(--font-mono)">
+      Kopiak <code>backups/</code> karpetan gordetzen dira. Berreskuratu aurretik uneko egoeraren kopia automatikoa sortzen da.
+    </div>
+
+    <div class="mat-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fitxategia</th>
+            <th>Data</th>
+            <th>Tamaina</th>
+            <th style="text-align:right">Ekintzak</th>
+          </tr>
+        </thead>
+        <tbody id="kopia-gorputza"></tbody>
       </table>
     </div>
   </div>
@@ -371,6 +402,7 @@ function ikuspegiaErakutsi(izena, el) {
   el.classList.add('active');
   if (izena === 'laburpena') laburpenaErrendatu();
   if (izena === 'materialak') materialakErrendatu();
+  if (izena === 'kopiak') kopiakErrendatu();
 }
 
 async function fabrikakKargatu() {
@@ -663,6 +695,85 @@ async function fabrikaEzabatu(id, izena) {
   if (!confirm('"' + izena + '" fabrika ezabatu nahi duzu?')) return;
   await fetch(API + '/api/factories/' + id, { method: 'DELETE' });
   await fabrikakKargatu();
+}
+
+// ---------- Segurtasun kopiak ----------
+
+function tamainaFormatua(byteak) {
+  if (byteak < 1024) return byteak + ' B';
+  if (byteak < 1024 * 1024) return (byteak / 1024).toFixed(1) + ' KB';
+  return (byteak / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function dataFormatua(iso) {
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2, '0');
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+async function kopiakErrendatu() {
+  const res = await fetch(API + '/api/backups');
+  const kopiak = await res.json();
+  const gorputza = document.getElementById('kopia-gorputza');
+
+  if (!kopiak.length) {
+    gorputza.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">💾</div><div>Ez dago segurtasun kopiarik.<br>"+ Kopia Berria" sakatu lehena sortzeko</div></div></td></tr>';
+    return;
+  }
+
+  gorputza.innerHTML = kopiak.map(k => {
+    const etiketa = k.auto
+      ? '<span class="tier-badge" style="margin-left:8px">auto</span>'
+      : k.uploaded ? '<span class="tier-badge" style="margin-left:8px">igoera</span>' : '';
+    return `
+      <tr>
+        <td style="color:var(--text-primary);font-family:var(--font-mono)">${k.name}${etiketa}</td>
+        <td>${dataFormatua(k.created)}</td>
+        <td class="net-zero">${tamainaFormatua(k.size)}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <a class="btn btn-sm" style="text-decoration:none" href="${API}/api/backups/${k.name}/download">Deskargatu</a>
+          <button class="btn btn-sm" onclick="kopiaBerreskuratu('${k.name}')">Berreskuratu</button>
+          <button class="btn btn-sm btn-danger" onclick="kopiaEzabatu('${k.name}')">Ezabatu</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+async function kopiaSortu() {
+  const res = await fetch(API + '/api/backups', { method: 'POST' });
+  if (!res.ok) { alert('Ezin izan da kopia sortu'); return; }
+  const k = await res.json();
+  await kopiakErrendatu();
+  alert('Kopia sortuta: ' + k.name);
+}
+
+async function kopiaIgo(input) {
+  const fitxategia = input.files[0];
+  if (!fitxategia) return;
+  const datuak = new FormData();
+  datuak.append('file', fitxategia);
+  const res = await fetch(API + '/api/backups/upload', { method: 'POST', body: datuak });
+  input.value = '';
+  const erantzuna = await res.json();
+  if (!res.ok) { alert('Errorea: ' + (erantzuna.error || 'ezin izan da igo')); return; }
+  await kopiakErrendatu();
+  alert('Kopia igota: ' + erantzuna.name);
+}
+
+async function kopiaBerreskuratu(izena) {
+  if (!confirm('"' + izena + '" kopia berreskuratu nahi duzu?\n\nUneko datu guztiak ordezkatuko dira. Aurretik kopia automatiko bat sortuko da.')) return;
+  const res = await fetch(API + '/api/backups/' + izena + '/restore', { method: 'POST' });
+  const erantzuna = await res.json();
+  if (!res.ok) { alert('Errorea: ' + (erantzuna.error || 'ezin izan da berreskuratu')); return; }
+  await fabrikakKargatu();
+  await kopiakErrendatu();
+  alert('Datuak berreskuratuta.\nAurreko egoera hemen gorde da: ' + erantzuna.safety_backup);
+}
+
+async function kopiaEzabatu(izena) {
+  if (!confirm('"' + izena + '" kopia betiko ezabatu nahi duzu?')) return;
+  await fetch(API + '/api/backups/' + izena, { method: 'DELETE' });
+  await kopiakErrendatu();
 }
 
 fabrikakKargatu();
