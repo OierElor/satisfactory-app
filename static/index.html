@@ -115,12 +115,12 @@
   }
 
   .factory-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
-  .factory-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .factory-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 5px; }
 
   .factory-header { padding: 16px 16px 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
   .factory-name { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 1px; line-height: 1.2; }
   .factory-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-family: var(--font-mono); }
-  .tier-badge { font-family: var(--font-mono); font-size: 11px; padding: 3px 8px; border: 1px solid var(--border-bright); color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
+  .badge { font-family: var(--font-mono); font-size: 11px; padding: 3px 8px; border: 1px solid var(--border-bright); color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
 
   .resources-section { padding: 0 16px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
@@ -213,10 +213,19 @@
 
   body::after { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 9999; }
 
-  .color-options { display: flex; gap: 8px; flex-wrap: wrap; }
-  .color-swatch { width: 28px; height: 28px; border-radius: 2px; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+  .color-options { display: flex; gap: 6px; flex-wrap: wrap; }
+  .color-swatch { width: 22px; height: 22px; border-radius: 2px; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
   .color-swatch:hover { transform: scale(1.15); }
+  .color-swatch.none { background: var(--bg-panel); border: 2px dashed var(--border-bright); color: var(--text-muted); font-size: 12px; line-height: 18px; text-align: center; }
   .color-swatch.selected { border-color: white; }
+
+  .settings-section { margin-bottom: 2.5rem; }
+  .settings-section .section-header { margin-bottom: 14px; }
+  .settings-section .section-title { font-size: 18px; }
+  .settings-section .section-title::before { height: 18px; }
+  .settings-hint { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; font-family: var(--font-mono); }
+  tr.unused td { opacity: 0.5; }
+  tr.unused:hover td { opacity: 1; }
 </style>
 </head>
 <body>
@@ -243,6 +252,7 @@
   <button class="tab active" onclick="ikuspegiaErakutsi('fabrikak', this)">Fabrikak</button>
   <button class="tab" onclick="ikuspegiaErakutsi('laburpena', this)">Laburpen Orokorra</button>
   <button class="tab" onclick="ikuspegiaErakutsi('materialak', this)">Materialak</button>
+  <button class="tab" onclick="ikuspegiaErakutsi('ezarpenak', this)">Ezarpenak</button>
   <button class="tab" onclick="ikuspegiaErakutsi('kopiak', this)">Segurtasun Kopiak</button>
 </nav>
 
@@ -309,6 +319,56 @@
     </div>
   </div>
 
+  <!-- EZARPENAK -->
+  <div id="ikuspegi-ezarpenak" class="view">
+
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title">Eremuak</div>
+        <button class="btn btn-primary btn-sm" onclick="eremuaSortu()">+ Eremu Berria</button>
+      </div>
+      <div class="settings-hint">
+        Fabrikak eremuka antolatzeko. Eremu bat ezabatzean bertako fabrikak ez dira galtzen, eremurik gabe geratzen dira.
+      </div>
+      <div class="mat-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Eremua</th>
+              <th>Fabrikak</th>
+              <th style="text-align:right">Ekintzak</th>
+            </tr>
+          </thead>
+          <tbody id="eremu-gorputza"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title">Materialen Koloreak</div>
+      </div>
+      <div class="settings-hint">
+        Fabrika bakoitzaren kolorea bertan gastatzen diren materialek definitzen dute, kantitatearen arabera.
+        Erabiltzen ez diren materialak ezaba daitezke.
+      </div>
+      <div class="mat-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Materiala</th>
+              <th>Kolorea</th>
+              <th>Erabilera</th>
+              <th style="text-align:right">Ekintzak</th>
+            </tr>
+          </thead>
+          <tbody id="material-kolore-gorputza"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
   <!-- SEGURTASUN KOPIAK -->
   <div id="ikuspegi-kopiak" class="view">
     <div class="section-header">
@@ -356,17 +416,8 @@
           <input type="text" id="f-izena" placeholder="Adib: Burdin Galdategia">
         </div>
         <div class="form-group">
-          <label>Maila / Tier</label>
-          <select id="f-maila">
-            <option value="1">1. Maila</option>
-            <option value="2">2. Maila</option>
-            <option value="3">3. Maila</option>
-            <option value="4">4. Maila</option>
-            <option value="5">5. Maila</option>
-            <option value="6">6. Maila</option>
-            <option value="7">7. Maila</option>
-            <option value="8">8. Maila</option>
-          </select>
+          <label>Eremua</label>
+          <select id="f-eremua"></select>
         </div>
       </div>
       <div class="form-group">
@@ -374,11 +425,8 @@
         <input type="text" id="f-deskribapena" placeholder="Fabrikaren azalpen laburra">
       </div>
       <div class="form-group">
-        <label>Kolore identifikatzailea</label>
-        <div class="color-options" id="kolore-aukerak"></div>
-      </div>
-      <div class="form-group">
         <label>Baliabideak (materialak)</label>
+        <datalist id="material-izenak"></datalist>
         <div class="resources-editor" id="baliabideen-editorea"></div>
         <button class="btn btn-sm" style="margin-top:8px" onclick="baliabideErrenkadaGehitu()">+ Material gehitu</button>
       </div>
@@ -393,7 +441,15 @@
 <script>
 const API = '';
 const KOLOREAK = ['#E8A838','#3FE88A','#38B4E8','#E85555','#B838E8','#38E8D4','#E83888','#E8D038','#8BE838'];
+const KOLORERIK_EZ = 'var(--text-muted)';
 let fabrikak = [], laburpenDatuak = [], unekoGrafikoak = {};
+let materialak = [], eremuak = [], materialKoloreak = {};
+
+function esk(testua) {
+  return String(testua == null ? '' : testua).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
 
 function ikuspegiaErakutsi(izena, el) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -402,6 +458,7 @@ function ikuspegiaErakutsi(izena, el) {
   el.classList.add('active');
   if (izena === 'laburpena') laburpenaErrendatu();
   if (izena === 'materialak') materialakErrendatu();
+  if (izena === 'ezarpenak') ezarpenakErrendatu();
   if (izena === 'kopiak') kopiakErrendatu();
 }
 
@@ -409,6 +466,21 @@ async function fabrikakKargatu() {
   const res = await fetch(API + '/api/factories');
   fabrikak = await res.json();
   fabrikakErrendatu();
+}
+
+async function materialakKargatu() {
+  const res = await fetch(API + '/api/materials');
+  materialak = await res.json();
+  materialKoloreak = {};
+  materialak.forEach(m => { if (m.color) materialKoloreak[m.name] = m.color; });
+  // Izen berriak eskuz idazten dira; iradokizunek idazketa-akatsak saihesten dituzte.
+  document.getElementById('material-izenak').innerHTML =
+    materialak.map(m => `<option value="${esk(m.name)}">`).join('');
+}
+
+async function eremuakKargatu() {
+  const res = await fetch(API + '/api/areas');
+  eremuak = await res.json();
 }
 
 async function laburpenaKargatu() {
@@ -428,38 +500,66 @@ function fabrikakErrendatu() {
 
   sareta.innerHTML = fabrikak.map(f => `
     <div class="factory-card">
-      <div class="factory-card-accent" style="background:${f.color}"></div>
+      <div class="factory-card-accent" style="background:${fabrikarenGradientea(f)}"></div>
       <div class="factory-header">
         <div>
-          <div class="factory-name">${f.name}</div>
-          ${f.description ? `<div class="factory-desc">${f.description}</div>` : ''}
+          <div class="factory-name">${esk(f.name)}</div>
+          ${f.description ? `<div class="factory-desc">${esk(f.description)}</div>` : ''}
         </div>
-        <div class="tier-badge">${f.tier}. M</div>
+        ${f.area_name ? `<div class="badge">${esk(f.area_name)}</div>` : ''}
       </div>
       <div class="resources-section">
         <div class="res-group inputs">
           <label>Kontsumoa</label>
           ${f.inputs.length ? f.inputs.map(r => `
             <div class="res-item">
-              <span class="res-name">${r.name}</span>
-              <span class="res-amount input">−${r.amount_per_min} ${r.unit}</span>
+              <span class="res-name">${esk(r.name)}</span>
+              <span class="res-amount input">−${r.amount_per_min} ${esk(r.unit)}</span>
             </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">bat ere ez</div>'}
         </div>
         <div class="res-group outputs">
           <label>Ekoizpena</label>
           ${f.outputs.length ? f.outputs.map(r => `
             <div class="res-item">
-              <span class="res-name">${r.name}</span>
-              <span class="res-amount output">+${r.amount_per_min} ${r.unit}</span>
+              <span class="res-name">${esk(r.name)}</span>
+              <span class="res-amount output">+${r.amount_per_min} ${esk(r.unit)}</span>
             </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">bat ere ez</div>'}
         </div>
       </div>
       <div class="factory-actions">
         <button class="btn btn-sm" onclick="fabrikaEditatzeko(${f.id})">Editatu</button>
-        <button class="btn btn-sm btn-danger" onclick="fabrikaEzabatu(${f.id}, '${f.name.replace(/'/g,"\\'")}')">Ezabatu</button>
+        <button class="btn btn-sm btn-danger" onclick="fabrikaEzabatu(${f.id})">Ezabatu</button>
       </div>
     </div>
   `).join('');
+}
+
+/* Fabrikaren kolorea bertan gastatzen diren materialek definitzen dute:
+   kontsumitutako material bakoitzeko banda bat, kantitatearen proportzioan. */
+function fabrikarenGradientea(f) {
+  const zatiak = f.inputs
+    .filter(r => r.amount_per_min > 0)
+    .map(r => ({ kolorea: materialKoloreak[r.name] || KOLORERIK_EZ, pisua: r.amount_per_min }));
+  if (!zatiak.length) return KOLORERIK_EZ;
+  if (zatiak.length === 1) return zatiak[0].kolorea;
+
+  const guztira = zatiak.reduce((a, z) => a + z.pisua, 0);
+  let pilatua = 0;
+  const geldialdiak = zatiak.map(z => {
+    const hasi = (pilatua / guztira) * 100;
+    pilatua += z.pisua;
+    return `${z.kolorea} ${hasi.toFixed(2)}% ${((pilatua / guztira) * 100).toFixed(2)}%`;
+  });
+  return `linear-gradient(90deg, ${geldialdiak.join(',')})`;
+}
+
+/* Chart.js-ek ez du CSS gradienterik onartzen: gehien kontsumitzen den
+   materialaren kolorea erabiltzen dugu ordezko gisa. */
+function fabrikarenKoloreNagusia(f) {
+  const nagusia = f.inputs
+    .filter(r => r.amount_per_min > 0)
+    .reduce((a, r) => (!a || r.amount_per_min > a.amount_per_min ? r : a), null);
+  return (nagusia && materialKoloreak[nagusia.name]) || '#3d5068';
 }
 
 async function laburpenaErrendatu() {
@@ -496,7 +596,7 @@ async function laburpenaErrendatu() {
   grafikoaSuntsitu('grafikoa-materialak');
   grafikoaSuntsitu('grafikoa-garbia');
 
-  const fabrikaKoloreak = fabrikak.map(f => f.color || '#E8A838');
+  const fabrikaKoloreak = fabrikak.map(fabrikarenKoloreNagusia);
   const fabrikaEkoizpenak = fabrikak.map(f => f.outputs.reduce((a, r) => a + r.amount_per_min, 0));
 
   unekoGrafikoak['grafikoa-fabrikak'] = new Chart(document.getElementById('grafikoa-fabrikak'), {
@@ -572,10 +672,10 @@ async function materialakErrendatu() {
     const barraEkoizp = Math.round((m.total_output / balioMax) * 80);
     return `
       <tr>
-        <td style="color:var(--text-primary);font-weight:500">${m.name}</td>
-        <td class="net-negative">${m.total_input > 0 ? m.total_input.toFixed(1) + ' ' + m.unit : '—'}</td>
-        <td class="net-positive">${m.total_output > 0 ? m.total_output.toFixed(1) + ' ' + m.unit : '—'}</td>
-        <td class="${netKlasea}">${netKatea} ${m.unit}</td>
+        <td style="color:var(--text-primary);font-weight:500">${esk(m.name)}</td>
+        <td class="net-negative">${m.total_input > 0 ? m.total_input.toFixed(1) + ' ' + esk(m.unit) : '—'}</td>
+        <td class="net-positive">${m.total_output > 0 ? m.total_output.toFixed(1) + ' ' + esk(m.unit) : '—'}</td>
+        <td class="${netKlasea}">${netKatea} ${esk(m.unit)}</td>
         <td>
           <div class="bar-wrap">
             <div class="bar" style="width:${barraKontsum}px;background:rgba(232,85,85,0.5)"></div>
@@ -586,13 +686,18 @@ async function materialakErrendatu() {
   }).join('');
 }
 
+function eremuHautatzaileaBete(hautatua) {
+  document.getElementById('f-eremua').innerHTML =
+    '<option value="">(eremurik ez)</option>' +
+    eremuak.map(e => `<option value="${e.id}"${e.id === hautatua ? ' selected' : ''}>${esk(e.name)}</option>`).join('');
+}
+
 function fabrikaBerriaIreki() {
   document.getElementById('editatu-id').value = '';
   document.getElementById('modal-titulua').textContent = 'Fabrika Berria';
   document.getElementById('f-izena').value = '';
   document.getElementById('f-deskribapena').value = '';
-  document.getElementById('f-maila').value = '1';
-  koloreaHasieratu('#E8A838');
+  eremuHautatzaileaBete(null);
   document.getElementById('baliabideen-editorea').innerHTML = '';
   baliabideErrenkadaGehitu();
   document.getElementById('modala').classList.add('open');
@@ -604,8 +709,7 @@ function fabrikaEditatzeko(id) {
   document.getElementById('modal-titulua').textContent = 'Fabrika Editatu';
   document.getElementById('f-izena').value = f.name;
   document.getElementById('f-deskribapena').value = f.description || '';
-  document.getElementById('f-maila').value = f.tier;
-  koloreaHasieratu(f.color);
+  eremuHautatzaileaBete(f.area_id);
   const ed = document.getElementById('baliabideen-editorea');
   ed.innerHTML = '';
   f.inputs.forEach(r => baliabideErrenkadaGehitu(r.name, r.amount_per_min, 'input'));
@@ -613,29 +717,12 @@ function fabrikaEditatzeko(id) {
   document.getElementById('modala').classList.add('open');
 }
 
-function koloreaHasieratu(hautatua) {
-  const el = document.getElementById('kolore-aukerak');
-  el.innerHTML = KOLOREAK.map(c => `
-    <div class="color-swatch ${c===hautatua?'selected':''}" style="background:${c}" onclick="koloreaHautatu('${c}', this)"></div>
-  `).join('');
-}
-
-function koloreaHautatu(kolorea, el) {
-  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-function hautatukoKoloreaLortu() {
-  const s = document.querySelector('.color-swatch.selected');
-  return s ? s.style.background : '#E8A838';
-}
-
 function baliabideErrenkadaGehitu(izena='', kopurua='', mota='output') {
   const ed = document.getElementById('baliabideen-editorea');
   const errenkada = document.createElement('div');
   errenkada.className = 'res-editor-item';
   errenkada.innerHTML = `
-    <input type="text" placeholder="Material izena" value="${izena}" style="height:32px;padding:4px 8px">
+    <input type="text" placeholder="Material izena" value="${esk(izena)}" list="material-izenak" style="height:32px;padding:4px 8px">
     <input type="number" placeholder="Kop." value="${kopurua}" min="0" step="0.1" style="height:32px;padding:4px 8px">
     <div class="res-type-toggle">
       <button class="input-btn${mota==='input'?' active':''}" onclick="motaAldatu(this,'input')">Kontsum.</button>
@@ -650,6 +737,123 @@ function motaAldatu(btn, mota) {
   const wrap = btn.closest('.res-type-toggle');
   wrap.querySelectorAll('button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+}
+
+// ---------- Ezarpenak: eremuak eta materialen koloreak ----------
+
+async function ezarpenakErrendatu() {
+  await Promise.all([eremuakKargatu(), materialakKargatu()]);
+  eremuakErrendatu();
+  materialKoloreakErrendatu();
+}
+
+function eremuakErrendatu() {
+  const gorputza = document.getElementById('eremu-gorputza');
+  if (!eremuak.length) {
+    gorputza.innerHTML = '<tr><td colspan="3"><div class="empty-state"><div class="empty-state-icon">🗺️</div><div>Ez dago eremurik.<br>"+ Eremu Berria" sakatu lehena sortzeko</div></div></td></tr>';
+    return;
+  }
+  gorputza.innerHTML = eremuak.map(e => `
+    <tr>
+      <td style="color:var(--text-primary);font-weight:500">${esk(e.name)}</td>
+      <td class="net-zero">${e.factory_count}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-sm" onclick="eremuaBerrizendatu(${e.id})">Izena aldatu</button>
+        <button class="btn btn-sm btn-danger" onclick="eremuaEzabatu(${e.id})">Ezabatu</button>
+      </td>
+    </tr>`).join('');
+}
+
+function materialKoloreakErrendatu() {
+  const gorputza = document.getElementById('material-kolore-gorputza');
+  gorputza.innerHTML = materialak.map(m => {
+    const erabilita = m.usage_count > 0;
+    const laukiak = KOLOREAK.map(c => `
+      <div class="color-swatch${c === m.color ? ' selected' : ''}" style="background:${c}"
+           title="${c}" onclick="materialKoloreaEzarri(${m.id}, '${c}')"></div>`).join('');
+    return `
+      <tr class="${erabilita ? '' : 'unused'}">
+        <td style="color:var(--text-primary);font-weight:500">${esk(m.name)}</td>
+        <td>
+          <div class="color-options">
+            ${laukiak}
+            <div class="color-swatch none${m.color ? '' : ' selected'}" title="Kolorerik ez"
+                 onclick="materialKoloreaEzarri(${m.id}, null)">×</div>
+          </div>
+        </td>
+        <td class="net-zero">${erabilita ? m.usage_count + ' fabrika' : 'erabili gabe'}</td>
+        <td style="text-align:right">
+          ${erabilita ? '' : `<button class="btn btn-sm btn-danger" onclick="materialaEzabatu(${m.id})">Ezabatu</button>`}
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+async function materialKoloreaEzarri(id, kolorea) {
+  const res = await fetch(API + '/api/materials/' + id, {
+    method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ color: kolorea })
+  });
+  if (!res.ok) { alert('Ezin izan da kolorea gorde'); return; }
+  await materialakKargatu();
+  materialKoloreakErrendatu();
+  fabrikakErrendatu();   // fabrika-marrak berehala eguneratu
+}
+
+async function materialaEzabatu(id) {
+  const m = materialak.find(x => x.id === id);
+  if (!confirm('"' + m.name + '" materiala betiko ezabatu nahi duzu?')) return;
+  const res = await fetch(API + '/api/materials/' + id, { method: 'DELETE' });
+  if (!res.ok) {
+    const erantzuna = await res.json();
+    alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
+    return;
+  }
+  await materialakKargatu();
+  materialKoloreakErrendatu();
+}
+
+async function eremuaSortu() {
+  const izena = (prompt('Eremu berriaren izena:') || '').trim();
+  if (!izena) return;
+  const res = await fetch(API + '/api/areas', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: izena })
+  });
+  if (!res.ok) {
+    const erantzuna = await res.json();
+    alert('Errorea: ' + (erantzuna.error || 'ezin izan da sortu'));
+    return;
+  }
+  await eremuakKargatu();
+  eremuakErrendatu();
+}
+
+async function eremuaBerrizendatu(id) {
+  const e = eremuak.find(x => x.id === id);
+  const izena = (prompt('Eremuaren izen berria:', e.name) || '').trim();
+  if (!izena || izena === e.name) return;
+  const res = await fetch(API + '/api/areas/' + id, {
+    method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: izena })
+  });
+  if (!res.ok) {
+    const erantzuna = await res.json();
+    alert('Errorea: ' + (erantzuna.error || 'ezin izan da aldatu'));
+    return;
+  }
+  await eremuakKargatu();
+  eremuakErrendatu();
+  await fabrikakKargatu();
+}
+
+async function eremuaEzabatu(id) {
+  const e = eremuak.find(x => x.id === id);
+  const oharra = e.factory_count
+    ? '\n\n' + e.factory_count + ' fabrika eremurik gabe geratuko dira (ez dira ezabatzen).'
+    : '';
+  if (!confirm('"' + e.name + '" eremua ezabatu nahi duzu?' + oharra)) return;
+  await fetch(API + '/api/areas/' + id, { method: 'DELETE' });
+  await eremuakKargatu();
+  eremuakErrendatu();
+  await fabrikakKargatu();
 }
 
 function modalaItxi(event) {
@@ -673,11 +877,11 @@ async function fabrikaGorde() {
     if (mat && !isNaN(kop) && kop > 0) baliabideak.push({ material: mat, amount: kop, type: mota });
   });
 
+  const eremua = document.getElementById('f-eremua').value;
   const datuak = {
     name: izena,
     description: document.getElementById('f-deskribapena').value,
-    tier: parseInt(document.getElementById('f-maila').value),
-    color: hautatukoKoloreaLortu(),
+    area_id: eremua ? parseInt(eremua) : null,
     resources: baliabideak
   };
 
@@ -688,11 +892,14 @@ async function fabrikaGorde() {
   }
 
   modalaItxi();
+  // Material berriak sortu ahal izan dira; koloreak birkargatu marrak zuzenak izan daitezen.
+  await materialakKargatu();
   await fabrikakKargatu();
 }
 
-async function fabrikaEzabatu(id, izena) {
-  if (!confirm('"' + izena + '" fabrika ezabatu nahi duzu?')) return;
+async function fabrikaEzabatu(id) {
+  const f = fabrikak.find(x => x.id === id);
+  if (!confirm('"' + f.name + '" fabrika ezabatu nahi duzu?')) return;
   await fetch(API + '/api/factories/' + id, { method: 'DELETE' });
   await fabrikakKargatu();
 }
@@ -723,11 +930,11 @@ async function kopiakErrendatu() {
 
   gorputza.innerHTML = kopiak.map(k => {
     const etiketa = k.auto
-      ? '<span class="tier-badge" style="margin-left:8px">auto</span>'
-      : k.uploaded ? '<span class="tier-badge" style="margin-left:8px">igoera</span>' : '';
+      ? '<span class="badge" style="margin-left:8px">auto</span>'
+      : k.uploaded ? '<span class="badge" style="margin-left:8px">igoera</span>' : '';
     return `
       <tr>
-        <td style="color:var(--text-primary);font-family:var(--font-mono)">${k.name}${etiketa}</td>
+        <td style="color:var(--text-primary);font-family:var(--font-mono)">${esk(k.name)}${etiketa}</td>
         <td>${dataFormatua(k.created)}</td>
         <td class="net-zero">${tamainaFormatua(k.size)}</td>
         <td style="text-align:right;white-space:nowrap">
@@ -765,6 +972,8 @@ async function kopiaBerreskuratu(izena) {
   const res = await fetch(API + '/api/backups/' + izena + '/restore', { method: 'POST' });
   const erantzuna = await res.json();
   if (!res.ok) { alert('Errorea: ' + (erantzuna.error || 'ezin izan da berreskuratu')); return; }
+  await eremuakKargatu();
+  await materialakKargatu();
   await fabrikakKargatu();
   await kopiakErrendatu();
   alert('Datuak berreskuratuta.\nAurreko egoera hemen gorde da: ' + erantzuna.safety_backup);
@@ -776,7 +985,11 @@ async function kopiaEzabatu(izena) {
   await kopiakErrendatu();
 }
 
-fabrikakKargatu();
+// Koloreak eta eremuak fabrikak marraztu aurretik behar dira.
+(async () => {
+  await Promise.all([materialakKargatu(), eremuakKargatu()]);
+  await fabrikakKargatu();
+})();
 </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 import sqlite3, os, re
+from collections import Counter
 from datetime import datetime
 
 app = Flask(__name__, static_folder='static')
@@ -10,6 +11,8 @@ DB = os.path.join(os.path.dirname(__file__), 'factories.db')
 BACKUP_DIR = os.path.join(os.path.dirname(__file__), 'backups')
 BACKUP_RE = re.compile(r'^kopia-\d{8}-\d{6}(-(auto|igoera))?(-\d+)?\.db$')
 BEHARREZKO_TAULAK = {'factories', 'materials', 'factory_resources'}
+
+KOLORE_RE = re.compile(r'^#[0-9A-Fa-f]{6}$')
 
 def get_db():
     conn = sqlite3.connect(DB)
@@ -24,7 +27,11 @@ def index():
 @app.route('/api/factories', methods=['GET'])
 def get_factories():
     db = get_db()
-    factories = db.execute("SELECT * FROM factories ORDER BY tier, name").fetchall()
+    factories = db.execute("""
+        SELECT f.*, a.name AS area_name
+        FROM factories f LEFT JOIN areas a ON f.area_id = a.id
+        ORDER BY a.name IS NULL, a.name, f.name
+    """).fetchall()
     result = []
     for f in factories:
         fdict = dict(f)
@@ -44,16 +51,16 @@ def get_factories():
     db.close()
     return jsonify(result)
 
-@app.route('/api/factories', methods=['POST'])
-def create_factory():
-    data = request.json
-    db = get_db()
-    cur = db.execute(
-        "INSERT INTO factories(name,description,tier,color) VALUES(?,?,?,?)",
-        (data['name'], data.get('description',''), data.get('tier',1), data.get('color','#E8A838'))
-    )
-    fid = cur.lastrowid
-    for res in data.get('resources', []):
+def eremua_baliozkoa(db, area_id):
+    """area_id None edo existitzen den eremu bat den egiaztatzen du."""
+    if area_id is None:
+        return True
+    return bool(db.execute("SELECT 1 FROM areas WHERE id=?", (area_id,)).fetchone())
+
+def baliabideak_idatzi(db, fid, baliabideak):
+    """Fabrikaren baliabideak ordezkatzen ditu; material berriak sortuz behar bada."""
+    db.execute("DELETE FROM factory_resources WHERE factory_id=?", (fid,))
+    for res in baliabideak:
         mat = db.execute("SELECT id FROM materials WHERE name=?", (res['material'],)).fetchone()
         if not mat:
             db.execute("INSERT INTO materials(name,unit,category,icon) VALUES(?,?,?,?)",
@@ -61,43 +68,166 @@ def create_factory():
             mat = db.execute("SELECT id FROM materials WHERE name=?", (res['material'],)).fetchone()
         db.execute("INSERT INTO factory_resources(factory_id,material_id,amount_per_min,type) VALUES(?,?,?,?)",
                    (fid, mat['id'], res['amount'], res['type']))
-    db.commit()
-    db.close()
+
+@app.route('/api/factories', methods=['POST'])
+def create_factory():
+    data = request.json or {}
+    izena = (data.get('name') or '').strip()
+    if not izena:
+        return jsonify({'error': 'Izena nahitaezkoa da'}), 400
+    db = get_db()
+    try:
+        if not eremua_baliozkoa(db, data.get('area_id')):
+            return jsonify({'error': 'Eremua ez da aurkitu'}), 400
+        cur = db.execute("INSERT INTO factories(name,description,area_id) VALUES(?,?,?)",
+                         (izena, data.get('description',''), data.get('area_id')))
+        fid = cur.lastrowid
+        baliabideak_idatzi(db, fid, data.get('resources', []))
+        db.commit()
+    finally:
+        db.close()
     return jsonify({'id': fid}), 201
 
 @app.route('/api/factories/<int:fid>', methods=['PUT'])
 def update_factory(fid):
-    data = request.json
+    data = request.json or {}
+    izena = (data.get('name') or '').strip()
+    if not izena:
+        return jsonify({'error': 'Izena nahitaezkoa da'}), 400
     db = get_db()
-    db.execute("UPDATE factories SET name=?,description=?,tier=?,color=? WHERE id=?",
-               (data['name'], data.get('description',''), data.get('tier',1), data.get('color','#E8A838'), fid))
-    db.execute("DELETE FROM factory_resources WHERE factory_id=?", (fid,))
-    for res in data.get('resources', []):
-        mat = db.execute("SELECT id FROM materials WHERE name=?", (res['material'],)).fetchone()
-        if not mat:
-            db.execute("INSERT INTO materials(name,unit,category,icon) VALUES(?,?,?,?)",
-                       (res['material'], res.get('unit','un/min'), 'solid', 'box'))
-            mat = db.execute("SELECT id FROM materials WHERE name=?", (res['material'],)).fetchone()
-        db.execute("INSERT INTO factory_resources(factory_id,material_id,amount_per_min,type) VALUES(?,?,?,?)",
-                   (fid, mat['id'], res['amount'], res['type']))
-    db.commit()
-    db.close()
+    try:
+        if not db.execute("SELECT 1 FROM factories WHERE id=?", (fid,)).fetchone():
+            return jsonify({'error': 'Fabrika ez da aurkitu'}), 404
+        if not eremua_baliozkoa(db, data.get('area_id')):
+            return jsonify({'error': 'Eremua ez da aurkitu'}), 400
+        db.execute("UPDATE factories SET name=?,description=?,area_id=? WHERE id=?",
+                   (izena, data.get('description',''), data.get('area_id'), fid))
+        baliabideak_idatzi(db, fid, data.get('resources', []))
+        db.commit()
+    finally:
+        db.close()
     return jsonify({'ok': True})
 
 @app.route('/api/factories/<int:fid>', methods=['DELETE'])
 def delete_factory(fid):
     db = get_db()
-    db.execute("DELETE FROM factories WHERE id=?", (fid,))
-    db.commit()
-    db.close()
+    try:
+        cur = db.execute("DELETE FROM factories WHERE id=?", (fid,))
+        db.commit()
+    finally:
+        db.close()
+    if not cur.rowcount:
+        return jsonify({'error': 'Fabrika ez da aurkitu'}), 404
     return jsonify({'ok': True})
 
 @app.route('/api/materials', methods=['GET'])
 def get_materials():
     db = get_db()
-    mats = db.execute("SELECT * FROM materials ORDER BY category, name").fetchall()
+    mats = db.execute("""
+        SELECT m.*, COUNT(DISTINCT fr.factory_id) AS usage_count
+        FROM materials m LEFT JOIN factory_resources fr ON fr.material_id = m.id
+        GROUP BY m.id
+        ORDER BY m.name
+    """).fetchall()
     db.close()
     return jsonify([dict(m) for m in mats])
+
+@app.route('/api/materials/<int:mid>', methods=['PUT'])
+def update_material(mid):
+    """Materialaren kolorea esleitzen edo kentzen du (color: null)."""
+    kolorea = (request.json or {}).get('color')
+    if kolorea is not None and not KOLORE_RE.match(kolorea):
+        return jsonify({'error': 'Kolorea ez da baliozko #RRGGBB balio bat'}), 400
+    db = get_db()
+    try:
+        cur = db.execute("UPDATE materials SET color=? WHERE id=?", (kolorea, mid))
+        db.commit()
+    finally:
+        db.close()
+    if not cur.rowcount:
+        return jsonify({'error': 'Materiala ez da aurkitu'}), 404
+    return jsonify({'ok': True})
+
+@app.route('/api/materials/<int:mid>', methods=['DELETE'])
+def delete_material(mid):
+    """Erabilita ez dagoen materiala bakarrik ezabatzen du."""
+    db = get_db()
+    try:
+        mat = db.execute("SELECT name FROM materials WHERE id=?", (mid,)).fetchone()
+        if not mat:
+            return jsonify({'error': 'Materiala ez da aurkitu'}), 404
+        erabilerak = db.execute(
+            "SELECT COUNT(DISTINCT factory_id) FROM factory_resources WHERE material_id=?", (mid,)
+        ).fetchone()[0]
+        if erabilerak:
+            return jsonify({
+                'error': '"%s" %d fabrikatan erabiltzen da; ezin da ezabatu' % (mat['name'], erabilerak),
+                'usage_count': erabilerak,
+            }), 409
+        db.execute("DELETE FROM materials WHERE id=?", (mid,))
+        db.commit()
+    finally:
+        db.close()
+    return jsonify({'ok': True})
+
+# ---------- Eremuak ----------
+
+@app.route('/api/areas', methods=['GET'])
+def get_areas():
+    db = get_db()
+    eremuak = db.execute("""
+        SELECT a.*, COUNT(f.id) AS factory_count
+        FROM areas a LEFT JOIN factories f ON f.area_id = a.id
+        GROUP BY a.id
+        ORDER BY a.name
+    """).fetchall()
+    db.close()
+    return jsonify([dict(e) for e in eremuak])
+
+@app.route('/api/areas', methods=['POST'])
+def create_area():
+    izena = ((request.json or {}).get('name') or '').strip()
+    if not izena:
+        return jsonify({'error': 'Izena nahitaezkoa da'}), 400
+    db = get_db()
+    try:
+        cur = db.execute("INSERT INTO areas(name) VALUES(?)", (izena,))
+        db.commit()
+    except sqlite3.IntegrityError:
+        return jsonify({'error': '"%s" eremua badago jada' % izena}), 409
+    finally:
+        db.close()
+    return jsonify({'id': cur.lastrowid, 'name': izena}), 201
+
+@app.route('/api/areas/<int:aid>', methods=['PUT'])
+def update_area(aid):
+    izena = ((request.json or {}).get('name') or '').strip()
+    if not izena:
+        return jsonify({'error': 'Izena nahitaezkoa da'}), 400
+    db = get_db()
+    try:
+        cur = db.execute("UPDATE areas SET name=? WHERE id=?", (izena, aid))
+        db.commit()
+    except sqlite3.IntegrityError:
+        return jsonify({'error': '"%s" eremua badago jada' % izena}), 409
+    finally:
+        db.close()
+    if not cur.rowcount:
+        return jsonify({'error': 'Eremua ez da aurkitu'}), 404
+    return jsonify({'ok': True})
+
+@app.route('/api/areas/<int:aid>', methods=['DELETE'])
+def delete_area(aid):
+    """Eremua ezabatzen du; bertako fabrikak eremurik gabe geratzen dira."""
+    db = get_db()
+    try:
+        cur = db.execute("DELETE FROM areas WHERE id=?", (aid,))
+        db.commit()
+    finally:
+        db.close()
+    if not cur.rowcount:
+        return jsonify({'error': 'Eremua ez da aurkitu'}), 404
+    return jsonify({'ok': True})
 
 @app.route('/api/summary', methods=['GET'])
 def get_summary():
@@ -227,6 +357,9 @@ def restore_backup(name):
     finally:
         helburua.close()
         jatorria.close()
+
+    # Kopia zaharrek eskema zaharra izan dezakete; eguneratu berreskuratu ondoren.
+    migrazioak_aplikatu()
     return jsonify({'ok': True, 'safety_backup': segurtasunekoa['name']})
 
 @app.route('/api/backups/upload', methods=['POST'])
@@ -244,6 +377,108 @@ def upload_backup():
         os.remove(bidea)
         return jsonify({'error': errorea}), 400
     return jsonify(kopia_datuak(izena)), 201
+
+# ---------- Migrazioak ----------
+
+RGB_RE = re.compile(r'^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)')
+
+def kolorea_hexara(balioa):
+    """'rgb(232, 168, 56)' → '#E8A838'. Ezagutzen ez bada, None."""
+    balioa = (balioa or '').strip()
+    if KOLORE_RE.match(balioa):
+        return balioa.upper()
+    bat = RGB_RE.match(balioa)
+    if bat:
+        return '#%02X%02X%02X' % tuple(int(g) for g in bat.groups())
+    return None
+
+def zutabeak(conn, taula):
+    return {r[1] for r in conn.execute("PRAGMA table_info(%s)" % taula)}
+
+def koloreak_materialetara(conn):
+    """Fabrika bakoitzaren kolorea bere output materialei esleitzen die.
+
+    Kolorea eskuz aukeratzen zenean, praktikan produkzio-kate bakoitzak bere
+    kolorea zuen. Horrela migrazioaren ondoren itxura berdintsua mantentzen da.
+    """
+    errenkadak = conn.execute("""
+        SELECT fr.material_id, f.color
+        FROM factory_resources fr JOIN factories f ON f.id = fr.factory_id
+        WHERE fr.type = 'output'
+    """).fetchall()
+    bozkak = {}
+    for material_id, kolorea in errenkadak:
+        hexa = kolorea_hexara(kolorea)
+        if hexa:
+            bozkak.setdefault(material_id, Counter())[hexa] += 1
+    for material_id, kontagailua in bozkak.items():
+        conn.execute("UPDATE materials SET color=? WHERE id=? AND color IS NULL",
+                     (kontagailua.most_common(1)[0][0], material_id))
+
+def migrazioak_aplikatu():
+    """Eskema eguneratzen du: tier/color kendu, eremuak eta materialen koloreak gehitu.
+
+    Idempotentea: abioan eta segurtasun kopia bat berreskuratu ondoren deitzen da.
+    """
+    conn = sqlite3.connect(DB)
+    conn.isolation_level = None
+    try:
+        badago_areas = bool(conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='areas'").fetchone())
+        badago_kolorea = 'color' in zutabeak(conn, 'materials')
+        fabrika_zutabeak = zutabeak(conn, 'factories')
+        zaharrak = fabrika_zutabeak & {'tier', 'color'}
+        if badago_areas and badago_kolorea and not zaharrak:
+            return
+
+        kopia_sortu('auto')   # atzera egiteko bidea, ezer ukitu aurretik
+
+        conn.execute("PRAGMA foreign_keys=OFF")
+        if not badago_areas:
+            conn.execute("""
+                CREATE TABLE areas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        if not badago_kolorea:
+            conn.execute("ALTER TABLE materials ADD COLUMN color TEXT")
+
+        if not zaharrak:
+            return
+
+        if 'color' in fabrika_zutabeak:
+            koloreak_materialetara(conn)
+
+        # Taula berreraiki. factory_resources-ek ON DELETE CASCADE duenez, hau
+        # foreign_keys=OFF gabe egiteak baliabide guztiak ezabatuko lituzke.
+        conn.execute("PRAGMA legacy_alter_table=ON")
+        conn.executescript("""
+            BEGIN;
+            CREATE TABLE factories_berria (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT,
+                area_id INTEGER REFERENCES areas(id) ON DELETE SET NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            INSERT INTO factories_berria(id,name,description,area_id,created_at)
+                SELECT id,name,description,NULL,created_at FROM factories;
+            DROP TABLE factories;
+            ALTER TABLE factories_berria RENAME TO factories;
+            COMMIT;
+        """)
+        conn.execute("PRAGMA legacy_alter_table=OFF")
+
+        hautsiak = conn.execute("PRAGMA foreign_key_check").fetchall()
+        if hautsiak:
+            raise RuntimeError('Migrazioak erreferentzia hautsiak utzi ditu: %r' % hautsiak)
+    finally:
+        conn.execute("PRAGMA foreign_keys=ON")
+        conn.close()
+
+migrazioak_aplikatu()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

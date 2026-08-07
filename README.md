@@ -69,9 +69,8 @@ Hori da dena. Aplikazioa prest dago erabiltzeko.
 1. Goiko eskuineko **"+ Fabrika Berria"** botoia sakatu
 2. Bete formularioa:
    - **Izena** — fabrikaren izena (adib. "Burdin Galdategia")
-   - **Maila** — fabrikaren Tier maila (1etik 8ra)
+   - **Eremua** — fabrika zein eremutan dagoen (aukerazkoa; **Ezarpenak** fitxan kudeatzen dira)
    - **Deskribapena** — azalpen laburra (aukerazkoa)
-   - **Kolorea** — identifikazio-kolorea
 3. Materialak gehitu:
    - **"+ Material gehitu"** sakatu material bakoitzarentzat
    - Izena idatzi (adib. "Burdina")
@@ -90,7 +89,9 @@ Fabrika-txartelaren beheko eskuinean:
 ## Fitxen azalpena
 
 ### Fabrikak
-Erregistratutako fabrika guztiak txarteletan erakusten ditu. Txartel bakoitzak erakusten du:
+Erregistratutako fabrika guztiak txarteletan erakusten ditu, eremuka ordenatuta. Txartel bakoitzak erakusten du:
+- Goiko kolore-marra — **bertan gastatzen diren materialek definitzen dute** (ikus [Fabrikaren kolorea](#fabrikaren-kolorea))
+- Eremuaren bereizgarria, esleituta badago
 - Kontsumoa (gorriz) — fabrikak behar dituen materialak minutuko
 - Ekoizpena (berdez) — fabrikak sortzen dituen materialak minutuko
 
@@ -110,20 +111,48 @@ Taula zehatza material guztiekin:
 | Saldo Garbia | Ekoizpena minus Kontsumoa |
 | Fluxua | Barra bisualak proportzioa ikusteko |
 
+### Ezarpenak
+Bi atal ditu:
+
+- **Eremuak** — fabrikak antolatzeko eremuak sortu, izena aldatu eta ezabatu. Eremu bat ezabatzean bertako fabrikak **ez dira galtzen**, eremurik gabe geratzen dira.
+- **Materialen Koloreak** — material bakoitzari kolore bat esleitu (klik bakarrean; `×` laukiak kolorea kentzen du). Erabiltzen ez diren materialak hemen ezaba daitezke, zerrenda garbi mantentzeko.
+
 ### Segurtasun Kopiak
 Datu-basearen kopiak sortu, deskargatu, igo eta berreskuratzeko fitxa. Ikusi [Segurtasun kopiak](#segurtasun-kopiak) atala.
 
 ---
 
+## Fabrikaren kolorea
+
+Fabrikaren kolorea ez da eskuz aukeratzen: **bertan gastatzen diren materialetatik kalkulatzen da**.
+
+Txartelaren goiko marra banda batzuetan zatitzen da, fabrikak kontsumitzen duen material bakoitzeko bat, kantitatearen proportzioan. Adibidez, 30 `Iron Ingot` eta 10 `Screws` kontsumitzen dituen fabrika batek marraren %75 lehenaren kolorez eta %25 bigarrenarenaz izango du.
+
+- Materialaren kolorea **Ezarpenak → Materialen Koloreak** atalean esleitzen da.
+- Kolorerik esleitu gabeko materialak grisez agertzen dira — horrela zer falta den begi bistan geratzen da.
+- Ezer kontsumitzen ez duen fabrika (adib. meatzaritza) marra gris osoa izango du.
+- **Laburpen Orokorra**-ko pasteltxo-grafikoak kolore bakarra behar duenez, gehien kontsumitzen den materialarena erabiltzen du.
+
+---
+
 ## Datu-basea
 
-`factories.db` fitxategia SQLite datu-base bat da. Hiru taula ditu:
+`factories.db` fitxategia SQLite datu-base bat da. Lau taula ditu:
 
-- **factories** — fabrika bakoitzaren informazioa (izena, maila, kolorea...)
-- **materials** — material guztiak (burdina, kobrea, plastikoa...)
+- **factories** — fabrika bakoitzaren informazioa (izena, deskribapena, eremua)
+- **materials** — material guztiak (burdina, kobrea, plastikoa...) bakoitzaren kolorearekin
 - **factory_resources** — fabrika eta materialen arteko loturak, kopuruarekin eta motarekin (input/output)
+- **areas** — fabrikak antolatzeko eremuak
 
 Datu-basea `app.py`-rekin batera egon behar da beti.
+
+Eskema abiaraztean automatikoki eguneratzen da. Bertsio zaharrago batetik (`tier` eta `color` zutabeak zituenetik) datorren datu-base bat irekitzean:
+
+1. `-auto` etiketadun segurtasun kopia bat sortzen da lehenik.
+2. Fabrika bakoitzaren kolore zaharra bere ekoizpen-materialei esleitzen zaie, itxura mantentzeko.
+3. `tier` eta `color` zutabeak kentzen dira eta `areas` taula sortzen da.
+
+Gauza bera gertatzen da kopia zahar bat berreskuratzean.
 
 ---
 
