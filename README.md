@@ -25,7 +25,9 @@ Ziurtatu karpeta-egitura hau duzula:
 ```
 satisfactory-app/
 ├── app.py
-├── factories.db
+├── requirements.txt
+├── test_segurtasuna.py
+├── factories.db          ← aukerazkoa: ez badago, hutsetik sortzen da
 └── static/
     └── index.html
 ```
@@ -33,9 +35,10 @@ satisfactory-app/
 ### 2. Dependentziak instalatu
 
 ```bash
-sudo apt install python3-pip python3-flask -y
-pip3 install flask-cors --break-system-packages
+sudo apt install python3-flask -y
 ```
+
+Flask da mendekotasun bakarra (ikus `requirements.txt`). Lehen `flask-cors` ere behar zen; jada ez — ikus [Segurtasuna](#segurtasuna).
 
 ### 3. Aplikazioa abiarazi
 
@@ -173,6 +176,39 @@ Gauza bera gertatzen da kopia zahar bat berreskuratzean.
 Balioztatzea: igotako edo berreskuratutako fitxategiak SQLite datu-base oso bat izan behar du (`integrity_check`) eta hiru taulak (`factories`, `materials`, `factory_resources`) eduki behar ditu. Bestela eragiketa bertan behera geratzen da.
 
 Kopiak eskuz ere kudea daitezke — `backups/` karpetako fitxategiak beste disko batera kopiatzea nahikoa da.
+
+---
+
+## Segurtasuna
+
+### Mehatxu-eredua
+
+Aplikazioa **ordenagailu bakarrean, erabiltzaile bakarrarentzat** dago pentsatuta. Ez du autentifikaziorik eta `127.0.0.1`-en soilik entzuten du — hau da, zure ordenagailuak bakarrik iritsi dezake.
+
+> **Garrantzitsua:** ez aldatu `host='127.0.0.1'` balioa `'0.0.0.0'`-ra autentifikazioa gehitu gabe. Hori eginez gero, zure sareko edonork datu guztiak irakurri, aldatu eta ezaba ditzake, inolako oztoporik gabe.
+
+### Hartutako neurriak
+
+| Neurria | Zergatik |
+|---|---|
+| **CORS gaituta EZ** | Lehen `CORS(app)` zegoen eta edozein jatorri onartzen zuen. Horrek esan nahi zuen bisitatzen zenuen **edozein webgunek** zure datuak irakurri edo fabrikak ezabatu zitzakeela `fetch` sinple batekin. Orain nabigatzaileak halako eskaerak blokeatzen ditu. Frontendak jatorri bera erabiltzen duenez, ez du CORSik behar. |
+| **Debug modua itzalita** | `debug=True`-k Werkzeug-en kontsola interaktiboa gaitzen du: errore batekin edonork Python kodea exekuta dezake. Garapenerako: `SATISFACTORY_DEBUG=1 python3 app.py` |
+| **Sarreren balioztatzea** | SQLite-k testua onartzen du zenbaki-zutabe batean. Balioztatu gabe, `amount` eremuan HTML bidal zitekeen eta gero orrian exekutatu (XSS). Orain zerbitzariak zenbaki finituak soilik onartzen ditu, eta izen/zerrenden luzerak mugatzen ditu. |
+| **Kopien edukia egiaztatzea** | Igotako `.db` bat kanpoko datua da. Lehen taulen izenak baino ez ziren egiaztatzen; orain koloreak eta kopuruak ere bai, prestatutako kopia batek koderik injektatu ez dezan. |
+| **HTML escape osoa** | Frontendak balio guztiak escapatzen ditu orrian txertatu aurretik, zenbakiak barne. |
+| **Segurtasun-goiburuak** | CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy`. CSPk datuak kanpora ateratzea eta orria iframe batean sartzea eragozten du. |
+| **Chart.js SRI-rekin** | `integrity` hash batekin kargatzen da: CDNa arriskatuz gero, nabigatzaileak fitxategia baztertzen du. |
+| **Kopien muga** | Gehienez 50 kopia; `-auto` zaharrenak automatikoki kentzen dira diskoa ez betetzeko. |
+
+### Probak exekutatu
+
+Aldaketak egin ondoren, egiaztatu ez dela ezer hautsi:
+
+```bash
+python3 -m unittest test_segurtasuna -v
+```
+
+25 proba dira, konpondutako arazo bakoitzeko bat. Datu-base erreala **ez dute inoiz ukitzen**: aldi baterako karpeta bat erabiltzen dute.
 
 ---
 

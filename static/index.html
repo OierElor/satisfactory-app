@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Satisfactory — Fabrika Kudeatzailea</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<!-- integrity: CDNa arriskatuz gero, nabigatzaileak fitxategia baztertzen du -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"
+        integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -471,8 +474,15 @@ async function fabrikakKargatu() {
 async function materialakKargatu() {
   const res = await fetch(API + '/api/materials');
   materialak = await res.json();
+  // Kolorea style-atributu batean txertatzen da. Zerbitzariak balioztatzen du
+  // idaztean eta kopiak igotzean, baina hemen ere egiaztatzen dugu: horrela
+  // formatu okerreko balio batek ezin du inoiz CSS/HTMLra ihes egin.
   materialKoloreak = {};
-  materialak.forEach(m => { if (m.color) materialKoloreak[m.name] = m.color; });
+  materialak.forEach(m => {
+    if (typeof m.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(m.color)) {
+      materialKoloreak[m.name] = m.color;
+    }
+  });
   // Izen berriak eskuz idazten dira; iradokizunek idazketa-akatsak saihesten dituzte.
   document.getElementById('material-izenak').innerHTML =
     materialak.map(m => `<option value="${esk(m.name)}">`).join('');
@@ -514,7 +524,7 @@ function fabrikakErrendatu() {
           ${f.inputs.length ? f.inputs.map(r => `
             <div class="res-item">
               <span class="res-name">${esk(r.name)}</span>
-              <span class="res-amount input">−${r.amount_per_min} ${esk(r.unit)}</span>
+              <span class="res-amount input">−${esk(r.amount_per_min)} ${esk(r.unit)}</span>
             </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">bat ere ez</div>'}
         </div>
         <div class="res-group outputs">
@@ -522,7 +532,7 @@ function fabrikakErrendatu() {
           ${f.outputs.length ? f.outputs.map(r => `
             <div class="res-item">
               <span class="res-name">${esk(r.name)}</span>
-              <span class="res-amount output">+${r.amount_per_min} ${esk(r.unit)}</span>
+              <span class="res-amount output">+${esk(r.amount_per_min)} ${esk(r.unit)}</span>
             </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">bat ere ez</div>'}
         </div>
       </div>
@@ -723,7 +733,7 @@ function baliabideErrenkadaGehitu(izena='', kopurua='', mota='output') {
   errenkada.className = 'res-editor-item';
   errenkada.innerHTML = `
     <input type="text" placeholder="Material izena" value="${esk(izena)}" list="material-izenak" style="height:32px;padding:4px 8px">
-    <input type="number" placeholder="Kop." value="${kopurua}" min="0" step="0.1" style="height:32px;padding:4px 8px">
+    <input type="number" placeholder="Kop." value="${esk(kopurua)}" min="0" step="0.1" style="height:32px;padding:4px 8px">
     <div class="res-type-toggle">
       <button class="input-btn${mota==='input'?' active':''}" onclick="motaAldatu(this,'input')">Kontsum.</button>
       <button class="output-btn${mota==='output'?' active':''}" onclick="motaAldatu(this,'output')">Ekoizp.</button>
@@ -938,9 +948,9 @@ async function kopiakErrendatu() {
         <td>${dataFormatua(k.created)}</td>
         <td class="net-zero">${tamainaFormatua(k.size)}</td>
         <td style="text-align:right;white-space:nowrap">
-          <a class="btn btn-sm" style="text-decoration:none" href="${API}/api/backups/${k.name}/download">Deskargatu</a>
-          <button class="btn btn-sm" onclick="kopiaBerreskuratu('${k.name}')">Berreskuratu</button>
-          <button class="btn btn-sm btn-danger" onclick="kopiaEzabatu('${k.name}')">Ezabatu</button>
+          <a class="btn btn-sm" style="text-decoration:none" href="${API}/api/backups/${encodeURIComponent(k.name)}/download">Deskargatu</a>
+          <button class="btn btn-sm" onclick="kopiaBerreskuratu('${esk(k.name)}')">Berreskuratu</button>
+          <button class="btn btn-sm btn-danger" onclick="kopiaEzabatu('${esk(k.name)}')">Ezabatu</button>
         </td>
       </tr>`;
   }).join('');

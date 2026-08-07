@@ -1,24 +1,120 @@
 from flask import Flask, jsonify, request, send_from_directory, send_file
-from flask_cors import CORS
-import sqlite3, os, re
+import sqlite3, os, re, math
 from collections import Counter
 from datetime import datetime
 
+# Aplikazioa localhost-erako tresna bat da, autentifikaziorik gabe. Horregatik
+# EZ da CORS gaitzen: hori gabe, nabigatzaileak beste jatorri batetik datozen
+# eskaerak blokeatzen ditu, eta bisitatzen duzun edozein webgunek ezin ditu
+# zure datuak irakurri edo ezabatu. Frontendak jatorri bera erabiltzen du.
 app = Flask(__name__, static_folder='static')
-CORS(app)
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
-DB = os.path.join(os.path.dirname(__file__), 'factories.db')
-BACKUP_DIR = os.path.join(os.path.dirname(__file__), 'backups')
-BACKUP_RE = re.compile(r'^kopia-\d{8}-\d{6}(-(auto|igoera))?(-\d+)?\.db$')
-BEHARREZKO_TAULAK = {'factories', 'materials', 'factory_resources'}
 
-KOLORE_RE = re.compile(r'^#[0-9A-Fa-f]{6}$')
+OINARRIA = os.path.dirname(os.path.abspath(__file__))
+DB = os.environ.get('SATISFACTORY_DB') or os.path.join(OINARRIA, 'factories.db')
+BACKUP_DIR = os.environ.get('SATISFACTORY_BACKUPS') or os.path.join(OINARRIA, 'backups')
+BACKUP_RE = re.compile(r'\Akopia-\d{8}-\d{6}(-(auto|igoera))?(-\d+)?\.db\Z')
+BEHARREZKO_TAULAK = {'factories', 'materials', 'factory_resources'}
+GEHIENEZ_KOPIAK = 50
+
+KOLORE_RE = re.compile(r'\A#[0-9A-Fa-f]{6}\Z')
+
+# Sarreren mugak. Zerbitzaria da agintaria: frontendak ere egiaztatzen du,
+# baina APIa zuzenean deitu daiteke.
+GEHIENEZ_IZENA = 200
+GEHIENEZ_DESKRIBAPENA = 1000
+GEHIENEZ_BALIABIDEAK = 200
+GEHIENEZ_KOPURUA = 1_000_000
+
+SEGURTASUN_GOIBURUAK = {
+    # script-src-ek 'unsafe-inline' behar du: frontendak inline onclick-ak
+    # erabiltzen ditu. Beraz CSPk ez du XSS exekuzioa blokeatzen — escape-a da
+    # horretarako defentsa. CSPk datuak kanpora ateratzea eragozten du
+    # (connect-src/img-src 'self') eta iframe/base trikimailuak.
+    'Content-Security-Policy': (
+        "default-src 'self'; "
+        "script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; "
+        "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; "
+        "font-src https://fonts.gstatic.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self'; "
+        "object-src 'none'; "
+        "base-uri 'none'; "
+        "frame-ancestors 'none'; "
+        "form-action 'none'"
+    ),
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+}
+
+@app.after_request
+def segurtasun_goiburuak_gehitu(erantzuna):
+    for izena, balioa in SEGURTASUN_GOIBURUAK.items():
+        erantzuna.headers.setdefault(izena, balioa)
+    return erantzuna
 
 def get_db():
     conn = sqlite3.connect(DB)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
+
+# ---------- Sarreren balioztatzea ----------
+
+class SarreraOkerra(Exception):
+    """Bezeroaren datuak baliogabeak dira; 400 batekin erantzuten da."""
+
+def testua_balioztatu(balioa, eremua, gehienez, nahitaezkoa=True):
+    if balioa is None:
+        balioa = ''
+    if not isinstance(balioa, str):
+        raise SarreraOkerra('%s testu bat izan behar da' % eremua)
+    balioa = balioa.strip()
+    if nahitaezkoa and not balioa:
+        raise SarreraOkerra('%s nahitaezkoa da' % eremua)
+    if len(balioa) > gehienez:
+        raise SarreraOkerra('%s luzeegia da (gehienez %d karaktere)' % (eremua, gehienez))
+    return balioa
+
+def kopurua_balioztatu(balioa):
+    """Zenbaki finitu positibo bat itzultzen du.
+
+    SQLite-k REAL zutabe batean testua onartzen du, eta hori frontendera
+    iristen da gero. Hemen geldiarazten dugu.
+    """
+    if isinstance(balioa, bool) or not isinstance(balioa, (int, float)):
+        raise SarreraOkerra('Kopurua zenbaki bat izan behar da')
+    balioa = float(balioa)
+    if not math.isfinite(balioa):
+        raise SarreraOkerra('Kopurua zenbaki finitu bat izan behar da')
+    if not 0 < balioa <= GEHIENEZ_KOPURUA:
+        raise SarreraOkerra('Kopurua 0 eta %d artean egon behar da' % GEHIENEZ_KOPURUA)
+    return balioa
+
+def baliabideak_balioztatu(baliabideak):
+    if baliabideak is None:
+        return []
+    if not isinstance(baliabideak, list):
+        raise SarreraOkerra('Baliabideak zerrenda bat izan behar dira')
+    if len(baliabideak) > GEHIENEZ_BALIABIDEAK:
+        raise SarreraOkerra('Baliabide gehiegi (gehienez %d)' % GEHIENEZ_BALIABIDEAK)
+    garbiak = []
+    for res in baliabideak:
+        if not isinstance(res, dict):
+            raise SarreraOkerra('Baliabide bakoitza objektu bat izan behar da')
+        mota = res.get('type')
+        if mota not in ('input', 'output'):
+            raise SarreraOkerra('Baliabidearen mota "input" edo "output" izan behar da')
+        garbiak.append({
+            'material': testua_balioztatu(res.get('material'), 'Materialaren izena', GEHIENEZ_IZENA),
+            'amount': kopurua_balioztatu(res.get('amount')),
+            'type': mota,
+        })
+    return garbiak
+
+@app.errorhandler(SarreraOkerra)
+def sarrera_okerra_kudeatu(errorea):
+    return jsonify({'error': str(errorea)}), 400
 
 @app.route('/')
 def index():
@@ -55,16 +151,21 @@ def eremua_baliozkoa(db, area_id):
     """area_id None edo existitzen den eremu bat den egiaztatzen du."""
     if area_id is None:
         return True
+    if isinstance(area_id, bool) or not isinstance(area_id, int):
+        raise SarreraOkerra('Eremuaren identifikatzailea zenbaki oso bat izan behar da')
     return bool(db.execute("SELECT 1 FROM areas WHERE id=?", (area_id,)).fetchone())
 
 def baliabideak_idatzi(db, fid, baliabideak):
-    """Fabrikaren baliabideak ordezkatzen ditu; material berriak sortuz behar bada."""
+    """Fabrikaren baliabideak ordezkatzen ditu; material berriak sortuz behar bada.
+
+    `baliabideak` jada `baliabideak_balioztatu`-tik pasatuta egon behar da.
+    """
     db.execute("DELETE FROM factory_resources WHERE factory_id=?", (fid,))
     for res in baliabideak:
         mat = db.execute("SELECT id FROM materials WHERE name=?", (res['material'],)).fetchone()
         if not mat:
             db.execute("INSERT INTO materials(name,unit,category,icon) VALUES(?,?,?,?)",
-                       (res['material'], res.get('unit','un/min'), 'solid', 'box'))
+                       (res['material'], 'un/min', 'solid', 'box'))
             mat = db.execute("SELECT id FROM materials WHERE name=?", (res['material'],)).fetchone()
         db.execute("INSERT INTO factory_resources(factory_id,material_id,amount_per_min,type) VALUES(?,?,?,?)",
                    (fid, mat['id'], res['amount'], res['type']))
@@ -72,17 +173,18 @@ def baliabideak_idatzi(db, fid, baliabideak):
 @app.route('/api/factories', methods=['POST'])
 def create_factory():
     data = request.json or {}
-    izena = (data.get('name') or '').strip()
-    if not izena:
-        return jsonify({'error': 'Izena nahitaezkoa da'}), 400
+    izena = testua_balioztatu(data.get('name'), 'Izena', GEHIENEZ_IZENA)
+    deskribapena = testua_balioztatu(data.get('description'), 'Deskribapena',
+                                     GEHIENEZ_DESKRIBAPENA, nahitaezkoa=False)
+    baliabideak = baliabideak_balioztatu(data.get('resources'))
     db = get_db()
     try:
         if not eremua_baliozkoa(db, data.get('area_id')):
             return jsonify({'error': 'Eremua ez da aurkitu'}), 400
         cur = db.execute("INSERT INTO factories(name,description,area_id) VALUES(?,?,?)",
-                         (izena, data.get('description',''), data.get('area_id')))
+                         (izena, deskribapena, data.get('area_id')))
         fid = cur.lastrowid
-        baliabideak_idatzi(db, fid, data.get('resources', []))
+        baliabideak_idatzi(db, fid, baliabideak)
         db.commit()
     finally:
         db.close()
@@ -91,9 +193,10 @@ def create_factory():
 @app.route('/api/factories/<int:fid>', methods=['PUT'])
 def update_factory(fid):
     data = request.json or {}
-    izena = (data.get('name') or '').strip()
-    if not izena:
-        return jsonify({'error': 'Izena nahitaezkoa da'}), 400
+    izena = testua_balioztatu(data.get('name'), 'Izena', GEHIENEZ_IZENA)
+    deskribapena = testua_balioztatu(data.get('description'), 'Deskribapena',
+                                     GEHIENEZ_DESKRIBAPENA, nahitaezkoa=False)
+    baliabideak = baliabideak_balioztatu(data.get('resources'))
     db = get_db()
     try:
         if not db.execute("SELECT 1 FROM factories WHERE id=?", (fid,)).fetchone():
@@ -101,8 +204,8 @@ def update_factory(fid):
         if not eremua_baliozkoa(db, data.get('area_id')):
             return jsonify({'error': 'Eremua ez da aurkitu'}), 400
         db.execute("UPDATE factories SET name=?,description=?,area_id=? WHERE id=?",
-                   (izena, data.get('description',''), data.get('area_id'), fid))
-        baliabideak_idatzi(db, fid, data.get('resources', []))
+                   (izena, deskribapena, data.get('area_id'), fid))
+        baliabideak_idatzi(db, fid, baliabideak)
         db.commit()
     finally:
         db.close()
@@ -136,7 +239,7 @@ def get_materials():
 def update_material(mid):
     """Materialaren kolorea esleitzen edo kentzen du (color: null)."""
     kolorea = (request.json or {}).get('color')
-    if kolorea is not None and not KOLORE_RE.match(kolorea):
+    if kolorea is not None and not (isinstance(kolorea, str) and KOLORE_RE.match(kolorea)):
         return jsonify({'error': 'Kolorea ez da baliozko #RRGGBB balio bat'}), 400
     db = get_db()
     try:
@@ -186,9 +289,7 @@ def get_areas():
 
 @app.route('/api/areas', methods=['POST'])
 def create_area():
-    izena = ((request.json or {}).get('name') or '').strip()
-    if not izena:
-        return jsonify({'error': 'Izena nahitaezkoa da'}), 400
+    izena = testua_balioztatu((request.json or {}).get('name'), 'Izena', GEHIENEZ_IZENA)
     db = get_db()
     try:
         cur = db.execute("INSERT INTO areas(name) VALUES(?)", (izena,))
@@ -201,9 +302,7 @@ def create_area():
 
 @app.route('/api/areas/<int:aid>', methods=['PUT'])
 def update_area(aid):
-    izena = ((request.json or {}).get('name') or '').strip()
-    if not izena:
-        return jsonify({'error': 'Izena nahitaezkoa da'}), 400
+    izena = testua_balioztatu((request.json or {}).get('name'), 'Izena', GEHIENEZ_IZENA)
     db = get_db()
     try:
         cur = db.execute("UPDATE areas SET name=? WHERE id=?", (izena, aid))
@@ -282,8 +381,30 @@ def kopia_datuak(izena):
         'uploaded': '-igoera' in izena,
     }
 
+def kopia_izenak():
+    """Karpetako kopia baliozkoen izenak, berrienak lehenik."""
+    return sorted((f for f in os.listdir(kopien_karpeta()) if BACKUP_RE.match(f)), reverse=True)
+
+def kopia_zaharrak_kendu():
+    """Mugatik gorako `-auto` kopia zaharrenak ezabatzen ditu.
+
+    Eskuzko eta igotako kopiak inoiz ez dira automatikoki ezabatzen: horiek
+    erabiltzaileak nahita sortu ditu. Mugarik gabe, kopia bakoitzak DB osoa
+    kopiatzen duenez, diskoa bete daiteke.
+    """
+    izenak = kopia_izenak()
+    soberakina = len(izenak) - GEHIENEZ_KOPIAK
+    if soberakina <= 0:
+        return
+    for izena in [i for i in reversed(izenak) if '-auto' in i][:soberakina]:
+        try:
+            os.remove(os.path.join(kopien_karpeta(), izena))
+        except OSError:
+            pass
+
 def kopia_sortu(etiketa=''):
     """SQLite-ren backup APIa erabiliz kopia koherentea sortzen du."""
+    kopia_zaharrak_kendu()
     izena = kopia_izena(etiketa)
     bidea = os.path.join(kopien_karpeta(), izena)
     jatorria = sqlite3.connect(DB)
@@ -296,8 +417,29 @@ def kopia_sortu(etiketa=''):
         jatorria.close()
     return kopia_datuak(izena)
 
+def edukia_baliozkoa(conn):
+    """Datuak frontendera bidaltzeko seguruak diren egiaztatzen du.
+
+    Kopia bat kanpotik dator eta edozein eduki izan dezake. Kolorea eta
+    kopurua zuzenean HTMLan txertatzen dira, beraz hemen egiaztatzen ditugu:
+    bestela prestatutako .db batek kodea injektatu lezake berreskuratzean.
+    """
+    zutabe_izenak = zutabeak(conn, 'materials')
+    if 'color' in zutabe_izenak:
+        for (kolorea,) in conn.execute("SELECT color FROM materials WHERE color IS NOT NULL"):
+            if not (isinstance(kolorea, str) and KOLORE_RE.match(kolorea)):
+                return False, 'Kopiak kolore baliogabe bat du: %r' % (kolorea,)
+    okerrak = conn.execute("""
+        SELECT COUNT(*) FROM factory_resources
+        WHERE typeof(amount_per_min) NOT IN ('real','integer')
+    """).fetchone()[0]
+    if okerrak:
+        return False, 'Kopiak zenbakizkoa ez den %d kopuru du' % okerrak
+    return True, None
+
 def kopia_baliozkoa(bidea):
-    """Fitxategia SQLite datu-base oso bat den eta beharrezko taulak dituen egiaztatzen du."""
+    """Fitxategia SQLite datu-base oso bat den, beharrezko taulak dituen eta
+    edukia segurua den egiaztatzen du."""
     try:
         conn = sqlite3.connect('file:%s?mode=ro' % bidea, uri=True)
         try:
@@ -307,19 +449,26 @@ def kopia_baliozkoa(bidea):
             falta = BEHARREZKO_TAULAK - taulak
             if falta:
                 return False, 'Taula hauek falta dira: ' + ', '.join(sorted(falta))
+            return edukia_baliozkoa(conn)
         finally:
             conn.close()
     except sqlite3.DatabaseError:
         return False, 'Fitxategia ez da baliozko SQLite datu-base bat'
-    return True, None
 
 @app.route('/api/backups', methods=['GET'])
 def list_backups():
-    izenak = sorted((f for f in os.listdir(kopien_karpeta()) if f.endswith('.db')), reverse=True)
-    return jsonify([kopia_datuak(i) for i in izenak])
+    # BACKUP_RE bidez iragazten dugu, deskargatzeak eta ezabatzeak bezala:
+    # horrela zerrendatutako izen guztiak [a-z0-9-]+.db dira, eta ezin dute
+    # frontendeko JS katetik ihes egin.
+    return jsonify([kopia_datuak(i) for i in kopia_izenak()])
 
 @app.route('/api/backups', methods=['POST'])
 def create_backup():
+    eskuzkoak = [i for i in kopia_izenak() if '-auto' not in i]
+    if len(eskuzkoak) >= GEHIENEZ_KOPIAK:
+        return jsonify({
+            'error': 'Kopia gehiegi (%d). Ezabatu batzuk berri bat sortu aurretik.' % len(eskuzkoak)
+        }), 409
     return jsonify(kopia_sortu()), 201
 
 @app.route('/api/backups/<name>/download', methods=['GET'])
@@ -360,6 +509,7 @@ def restore_backup(name):
 
     # Kopia zaharrek eskema zaharra izan dezakete; eguneratu berreskuratu ondoren.
     migrazioak_aplikatu()
+    eskema_sortu()
     return jsonify({'ok': True, 'safety_backup': segurtasunekoa['name']})
 
 @app.route('/api/backups/upload', methods=['POST'])
@@ -392,7 +542,13 @@ def kolorea_hexara(balioa):
         return '#%02X%02X%02X' % tuple(int(g) for g in bat.groups())
     return None
 
+TAULA_IZENAK = {'factories', 'materials', 'factory_resources', 'areas'}
+
 def zutabeak(conn, taula):
+    # PRAGMA-k ez du parametrorik onartzen, beraz kateatu behar da. Zerrenda
+    # zuriak bermatzen du kanpoko baliorik ez dela inoiz hona iristen.
+    if taula not in TAULA_IZENAK:
+        raise ValueError('Taula ezezaguna: %r' % (taula,))
     return {r[1] for r in conn.execute("PRAGMA table_info(%s)" % taula)}
 
 def koloreak_materialetara(conn):
@@ -415,6 +571,49 @@ def koloreak_materialetara(conn):
         conn.execute("UPDATE materials SET color=? WHERE id=? AND color IS NULL",
                      (kontagailua.most_common(1)[0][0], material_id))
 
+def eskema_sortu():
+    """Falta diren taulak sortzen ditu, hutsetik instalatzeko.
+
+    Lehen aplikazioak `factories.db` existitzen zela suposatzen zuen eta
+    kraskatu egiten zen fitxategirik gabe.
+    """
+    conn = sqlite3.connect(DB)
+    try:
+        with conn:
+            conn.executescript("""
+                CREATE TABLE IF NOT EXISTS areas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS factories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    area_id INTEGER REFERENCES areas(id) ON DELETE SET NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS materials (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    unit TEXT DEFAULT 'un/min',
+                    category TEXT DEFAULT 'solid',
+                    icon TEXT DEFAULT 'box',
+                    color TEXT
+                );
+                CREATE TABLE IF NOT EXISTS factory_resources (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    factory_id INTEGER NOT NULL,
+                    material_id INTEGER NOT NULL,
+                    amount_per_min REAL NOT NULL,
+                    type TEXT NOT NULL CHECK(type IN ("input","output")),
+                    FOREIGN KEY(factory_id) REFERENCES factories(id) ON DELETE CASCADE,
+                    FOREIGN KEY(material_id) REFERENCES materials(id)
+                );
+            """)
+    finally:
+        conn.close()
+
 def migrazioak_aplikatu():
     """Eskema eguneratzen du: tier/color kendu, eremuak eta materialen koloreak gehitu.
 
@@ -423,12 +622,21 @@ def migrazioak_aplikatu():
     conn = sqlite3.connect(DB)
     conn.isolation_level = None
     try:
-        badago_areas = bool(conn.execute(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='areas'").fetchone())
-        badago_kolorea = 'color' in zutabeak(conn, 'materials')
+        def taula_badago(izena):
+            return bool(conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (izena,)).fetchone())
+
+        # Datu-base hutsa edo berria: ez dago migratzeko ezer. `eskema_sortu`-k
+        # arduratuko da taulak sortzeaz.
+        if not taula_badago('factories'):
+            return
+
+        badago_areas = taula_badago('areas')
+        badago_materials = taula_badago('materials')
+        badago_kolorea = badago_materials and 'color' in zutabeak(conn, 'materials')
         fabrika_zutabeak = zutabeak(conn, 'factories')
         zaharrak = fabrika_zutabeak & {'tier', 'color'}
-        if badago_areas and badago_kolorea and not zaharrak:
+        if badago_areas and (badago_kolorea or not badago_materials) and not zaharrak:
             return
 
         kopia_sortu('auto')   # atzera egiteko bidea, ezer ukitu aurretik
@@ -442,7 +650,7 @@ def migrazioak_aplikatu():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-        if not badago_kolorea:
+        if badago_materials and not badago_kolorea:
             conn.execute("ALTER TABLE materials ADD COLUMN color TEXT")
 
         if not zaharrak:
@@ -478,7 +686,15 @@ def migrazioak_aplikatu():
         conn.execute("PRAGMA foreign_keys=ON")
         conn.close()
 
+# Ordena garrantzitsua da: migrazioak eskema zaharra espero du eta bere
+# segurtasun kopia hartzen du ezer aldatu aurretik. Gero eskema_sortu-k falta
+# den edozer betetzen du (datu-base guztiz berri bat, adibidez).
 migrazioak_aplikatu()
+eskema_sortu()
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # debug=True-k Werkzeug-en kontsola interaktiboa gaitzen du: kudeatu gabeko
+    # errore batekin edonork kodea exekuta dezake. Garapenerako soilik:
+    #   SATISFACTORY_DEBUG=1 python3 app.py
+    app.run(debug=os.environ.get('SATISFACTORY_DEBUG') == '1',
+            host='127.0.0.1', port=5000)
