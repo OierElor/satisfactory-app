@@ -544,11 +544,19 @@ function fabrikakErrendatu() {
   `).join('');
 }
 
-/* Fabrikaren kolorea bertan gastatzen diren materialek definitzen dute:
-   kontsumitutako material bakoitzeko banda bat, kantitatearen proportzioan. */
+/* Kolorea definitzen duten materialak.
+
+   Lehentasuna gastatzen direnek dute. Fabrikak ezer gastatzen ez badu
+   —meatzeak, ur-ponpak edo sarrerak oraindik erregistratu gabe dituztenak—
+   ekoizten duenak definitzen du kolorea, marra grisa utzi beharrean. */
+function koloreIturria(f) {
+  const gastatzen = f.inputs.filter(r => r.amount_per_min > 0);
+  return gastatzen.length ? gastatzen : f.outputs.filter(r => r.amount_per_min > 0);
+}
+
+/* Material bakoitzeko banda bat, kantitatearen proportzioan. */
 function fabrikarenGradientea(f) {
-  const zatiak = f.inputs
-    .filter(r => r.amount_per_min > 0)
+  const zatiak = koloreIturria(f)
     .map(r => ({ kolorea: materialKoloreak[r.name] || KOLORERIK_EZ, pisua: r.amount_per_min }));
   if (!zatiak.length) return KOLORERIK_EZ;
   if (zatiak.length === 1) return zatiak[0].kolorea;
@@ -563,11 +571,10 @@ function fabrikarenGradientea(f) {
   return `linear-gradient(90deg, ${geldialdiak.join(',')})`;
 }
 
-/* Chart.js-ek ez du CSS gradienterik onartzen: gehien kontsumitzen den
+/* Chart.js-ek ez du CSS gradienterik onartzen: kantitate handieneko
    materialaren kolorea erabiltzen dugu ordezko gisa. */
 function fabrikarenKoloreNagusia(f) {
-  const nagusia = f.inputs
-    .filter(r => r.amount_per_min > 0)
+  const nagusia = koloreIturria(f)
     .reduce((a, r) => (!a || r.amount_per_min > a.amount_per_min ? r : a), null);
   return (nagusia && materialKoloreak[nagusia.name]) || '#3d5068';
 }

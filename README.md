@@ -93,7 +93,7 @@ Fabrika-txartelaren beheko eskuinean:
 
 ### Fabrikak
 Erregistratutako fabrika guztiak txarteletan erakusten ditu, eremuka ordenatuta. Txartel bakoitzak erakusten du:
-- Goiko kolore-marra — **bertan gastatzen diren materialek definitzen dute** (ikus [Fabrikaren kolorea](#fabrikaren-kolorea))
+- Goiko kolore-marra — **bertan gastatzen diren materialek definitzen dute**, edo ezer gastatzen ez badu, ekoizten dituenek (ikus [Fabrikaren kolorea](#fabrikaren-kolorea))
 - Eremuaren bereizgarria, esleituta badago
 - Kontsumoa (gorriz) — fabrikak behar dituen materialak minutuko
 - Ekoizpena (berdez) — fabrikak sortzen dituen materialak minutuko
@@ -131,10 +131,12 @@ Fabrikaren kolorea ez da eskuz aukeratzen: **bertan gastatzen diren materialetat
 
 Txartelaren goiko marra banda batzuetan zatitzen da, fabrikak kontsumitzen duen material bakoitzeko bat, kantitatearen proportzioan. Adibidez, 30 `Iron Ingot` eta 10 `Screws` kontsumitzen dituen fabrika batek marraren %75 lehenaren kolorez eta %25 bigarrenarenaz izango du.
 
+**Ezer gastatzen ez duen fabrikak ekoizten duenaren kolorea hartzen du.** Meatzeek, ur-ponpek eta oraindik sarrerak erregistratu gabe dituzten fabrikek horrela kolorea izaten jarraitzen dute, marra gris hutsa erakutsi beharrean.
+
 - Materialaren kolorea **Ezarpenak → Materialen Koloreak** atalean esleitzen da.
 - Kolorerik esleitu gabeko materialak grisez agertzen dira — horrela zer falta den begi bistan geratzen da.
-- Ezer kontsumitzen ez duen fabrika (adib. meatzaritza) marra gris osoa izango du.
-- **Laburpen Orokorra**-ko pasteltxo-grafikoak kolore bakarra behar duenez, gehien kontsumitzen den materialarena erabiltzen du.
+- Ez sarrerarik ez irteerarik ez duen fabrika bakarrik geratzen da guztiz gris.
+- **Laburpen Orokorra**-ko pasteltxo-grafikoak kolore bakarra behar duenez, kantitate handieneko materialarena erabiltzen du.
 
 ---
 
