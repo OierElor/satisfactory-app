@@ -216,11 +216,14 @@
 
   body::after { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 9999; }
 
-  .color-options { display: flex; gap: 6px; flex-wrap: wrap; }
-  .color-swatch { width: 22px; height: 22px; border-radius: 2px; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+  .color-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  /* Ertz argi arinak beltza eta kolore ilunak hondo ilunaren gainean bereizten ditu. */
+  .color-swatch { width: 22px; height: 22px; border-radius: 2px; cursor: pointer; border: 1px solid rgba(255,255,255,0.25); transition: transform 0.1s; }
   .color-swatch:hover { transform: scale(1.15); }
-  .color-swatch.none { background: var(--bg-panel); border: 2px dashed var(--border-bright); color: var(--text-muted); font-size: 12px; line-height: 18px; text-align: center; }
-  .color-swatch.selected { border-color: white; }
+  .color-swatch.none { background: var(--bg-panel); border: 1px dashed var(--border-bright); color: var(--text-muted); font-size: 12px; line-height: 20px; text-align: center; }
+  /* Hautapena kanpoko eraztun bidez, ez ertzez: tarteko eraztun ilunak txuria
+     ere bereizten du. Ertz zuri soil batek ez luke balioko kolore zurietan. */
+  .color-swatch.selected { box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px #fff; }
 
   .settings-section { margin-bottom: 2.5rem; }
   .settings-section .section-header { margin-bottom: 14px; }
@@ -443,7 +446,21 @@
 
 <script>
 const API = '';
-const KOLOREAK = ['#E8A838','#3FE88A','#38B4E8','#E85555','#B838E8','#38E8D4','#E83888','#E8D038','#8BE838'];
+/* Paleta, ñabarduraren arabera ordenatuta. Lehendik zeuden bederatziak
+   mantendu behar dira: materialei esleitutako koloreak balio hauek dira. */
+const KOLOREAK = [
+  '#E8A838', '#E87438', '#E8D038', '#8BE838',
+  '#3FE88A', '#38E8D4', '#38B4E8', '#5A6EE8',
+  '#B838E8', '#E83888', '#E85555', '#A6763C',
+  '#FFFFFF', '#B8C4D0', '#7A8FA0', '#000000',
+];
+
+const KOLORE_IZENAK = {
+  '#E8A838': 'Anbarra',  '#E87438': 'Laranja',   '#E8D038': 'Horia',      '#8BE838': 'Lima',
+  '#3FE88A': 'Berdea',   '#38E8D4': 'Turkesa',   '#38B4E8': 'Urdina',     '#5A6EE8': 'Indigoa',
+  '#B838E8': 'Morea',    '#E83888': 'Arrosa',    '#E85555': 'Gorria',     '#A6763C': 'Marroia',
+  '#FFFFFF': 'Txuria',   '#B8C4D0': 'Zilarra',   '#7A8FA0': 'Grisa',      '#000000': 'Beltza',
+};
 const KOLORERIK_EZ = 'var(--text-muted)';
 let fabrikak = [], laburpenDatuak = [], unekoGrafikoak = {};
 let materialak = [], eremuak = [], materialKoloreak = {};
@@ -785,9 +802,12 @@ function materialKoloreakErrendatu() {
   const gorputza = document.getElementById('material-kolore-gorputza');
   gorputza.innerHTML = materialak.map(m => {
     const erabilita = m.usage_count > 0;
+    // Konparaketa maiuskula/minuskulei jaramonik egin gabe: DBan gordetakoa
+    // APIaren bidez minuskulaz ere etor daiteke.
+    const unekoa = (m.color || '').toUpperCase();
     const laukiak = KOLOREAK.map(c => `
-      <div class="color-swatch${c === m.color ? ' selected' : ''}" style="background:${c}"
-           title="${c}" onclick="materialKoloreaEzarri(${m.id}, '${c}')"></div>`).join('');
+      <div class="color-swatch${c === unekoa ? ' selected' : ''}" style="background:${c}"
+           title="${KOLORE_IZENAK[c]} · ${c}" onclick="materialKoloreaEzarri(${m.id}, '${c}')"></div>`).join('');
     return `
       <tr class="${erabilita ? '' : 'unused'}">
         <td style="color:var(--text-primary);font-weight:500">${esk(m.name)}</td>
