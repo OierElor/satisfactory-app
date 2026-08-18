@@ -1,3 +1,9 @@
 backups/
 __pycache__/
 *.pyc
+
+# Datuak. Aplikazioa GitHub Pages-en argitaratzen da, eta datuak nabigatzailean
+# gordetzen dira, ez errepositorioan. Migrazioaren emaitza eta esportazioak
+# fitxategi pertsonalak dira: ez dira igo behar.
+datuak.json
+kopia-*.json

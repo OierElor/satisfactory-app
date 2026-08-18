@@ -2,66 +2,53 @@
 
 Zure Satisfactory-ko fabriken kontsumoa eta ekoizpena kudeatzeko tresna. Fabrika bakoitzak erabiltzen eta sortzen dituen materialak erregistratu, eta grafikoki ikusi zure ekoizpen-kateak.
 
+Aplikazioa **nabigatzailean bertan** exekutatzen da, zerbitzaririk gabe. Ordenagailuan zein mugikorrean erabil daiteke, eta offline ere bai.
+
 ---
 
 ## Aurrebaldintza
 
-- Python 3.8 edo berriagoa
-- pip
+Bat ere ez. Nabigatzaile moderno bat besterik ez.
 
-Debian/Ubuntu-n egiaztatzeko:
-```bash
-python3 --version
-```
+Lehen Python eta Flask behar ziren; jada ez — ikus [Arkitektura](#arkitektura).
 
 ---
 
-## Instalazioa
+## Erabiltzen hasi
 
-### 1. Fitxategiak deskargatu
+### Mugikorrean (PWA gisa instalatuta)
 
-Ziurtatu karpeta-egitura hau duzula:
+1. Ireki aplikazioaren helbidea nabigatzailean.
+2. Menuan, sakatu **"Hasierako pantailan gehitu"** (Chrome) edo **"Instalatu"**.
+3. Aplikazio arrunt baten moduan irekiko da, eta offline funtzionatuko du.
 
-```
-satisfactory-app/
-├── app.py
-├── requirements.txt
-├── test_segurtasuna.py
-├── factories.db          ← aukerazkoa: ez badago, hutsetik sortzen da
-└── static/
-    └── index.html
-```
+### Ordenagailuan
 
-### 2. Dependentziak instalatu
+Helbide bera ireki nabigatzailean. Instalatu ere egin daiteke (helbide-barrako instalazio-ikonoa).
+
+Garapenerako, tokiko zerbitzari batekin:
 
 ```bash
-sudo apt install python3-flask -y
+python3 -m http.server 8000
 ```
 
-Flask da mendekotasun bakarra (ikus `requirements.txt`). Lehen `flask-cors` ere behar zen; jada ez — ikus [Segurtasuna](#segurtasuna).
+Gero `http://localhost:8000` ireki. (Python-en liburutegi estandarra da; ez du ezer instalatu behar.)
 
-### 3. Aplikazioa abiarazi
+> **Oharra:** ez ireki `index.html` fitxategia zuzenean (`file://`). Nabigatzaileek biltegiratzea mugatzen dute horrela, eta datuak gal litezke.
 
-```bash
-cd satisfactory-app
-python3 app.py
-```
+---
 
-Terminalean honelako zerbait ikusi beharko duzu:
+## Datuak non gordetzen dira
 
-```
-* Running on http://127.0.0.1:5000
-```
+Gailu bakoitzeko nabigatzailean, ez zerbitzari batean. Horrek esan nahi du:
 
-### 4. Nabigatzailean ireki
+- **Gailu bakoitzak bere datuak ditu.** Ez dira automatikoki sinkronizatzen.
+- **Esportatu aldizka.** "Segurtasun Kopiak" fitxan, **Esportatu JSON** botoiak fitxategi bat deskargatzen du. Hori da zure segurtasun-kopia.
+- **Gailuen artean mugitzeko:** esportatu batean, eta **Fitxategitik Inportatu** bestean.
 
-```
-http://localhost:5000
-```
-
-Hori da dena. Aplikazioa prest dago erabiltzeko.
-
-> Gelditzeko `Ctrl+C` sakatu terminalean.
+> **Garrantzitsua:** inportazioak datu guztiak **ordezkatu** egiten ditu; ez du bat-egiterik egiten. Bi gailuetan aldi berean editatuz gero, alde baten aldaketak galduko dira. Inportatu aurretik uneko egoera automatikoki deskargatzen da, badaezpada.
+>
+> Nabigazio-datuak garbitzeak datuak ezaba ditzake. Aplikazioak biltegi iraunkorra eskatzen dio nabigatzaileari, eta egoera "Segurtasun Kopiak" fitxan erakusten du.
 
 ---
 
@@ -121,7 +108,7 @@ Bi atal ditu:
 - **Materialen Koloreak** — material bakoitzari kolore bat esleitu (klik bakarrean; `×` laukiak kolorea kentzen du). Erabiltzen ez diren materialak hemen ezaba daitezke, zerrenda garbi mantentzeko.
 
 ### Segurtasun Kopiak
-Datu-basearen kopiak sortu, deskargatu, igo eta berreskuratzeko fitxa. Ikusi [Segurtasun kopiak](#segurtasun-kopiak) atala.
+Datuak JSON fitxategi batera esportatu eta handik inportatzeko fitxa. Biltegiaren egoera ere erakusten du: zenbat erregistro dauden, zenbat leku hartzen duten, azken esportaziotik zenbat denbora pasa den, eta nabigatzaileak datuak babestuta dituen. Ikusi [Datuak non gordetzen diren](#datuak-non-gordetzen-dira).
 
 ---
 
@@ -140,44 +127,25 @@ Txartelaren goiko marra banda batzuetan zatitzen da, fabrikak kontsumitzen duen 
 
 ---
 
-## Datu-basea
+## Arkitektura
 
-`factories.db` fitxategia SQLite datu-base bat da. Lau taula ditu:
+Aplikazio osoa nabigatzailean exekutatzen da. Ez dago zerbitzaririk, ez datu-baserik diskoan.
 
-- **factories** — fabrika bakoitzaren informazioa (izena, deskribapena, eremua)
-- **materials** — material guztiak (burdina, kobrea, plastikoa...) bakoitzaren kolorearekin
-- **factory_resources** — fabrika eta materialen arteko loturak, kopuruarekin eta motarekin (input/output)
-- **areas** — fabrikak antolatzeko eremuak
+```
+index.html              interfazea (markup + estiloak)
+js/balioztatu.js        sarreren balioztatzea
+js/biltegia.js          datuak eta domeinu-eragiketak (localStorage)
+js/api.js               bideratzailea: interfazea eta biltegia lotzen ditu
+js/kopiak.js            esportazioa eta inportazioa
+js/probak.js            proba funtzionalak
+sw.js                   service worker-a (offline)
+bendor/                 Chart.js eta letra-tipoak, lokalean
+tresnak/                migrazio- eta egiaztapen-tresnak
+```
 
-Datu-basea `app.py`-rekin batera egon behar da beti.
+Datuak `localStorage`-en JSON dokumentu bakar batean daude. Datu-multzoa txikia da (47 fabrikarekin ~16 KB), eta nabigatzailearen muga 5–10 MB, beraz tarte handia dago.
 
-Eskema abiaraztean automatikoki eguneratzen da. Bertsio zaharrago batetik (`tier` eta `color` zutabeak zituenetik) datorren datu-base bat irekitzean:
-
-1. `-auto` etiketadun segurtasun kopia bat sortzen da lehenik.
-2. Fabrika bakoitzaren kolore zaharra bere ekoizpen-materialei esleitzen zaie, itxura mantentzeko.
-3. `tier` eta `color` zutabeak kentzen dira eta `areas` taula sortzen da.
-
-Gauza bera gertatzen da kopia zahar bat berreskuratzean.
-
----
-
-## Segurtasun kopiak
-
-**"Segurtasun Kopiak"** fitxan datu-base osoaren kopiak kudea daitezke. Kopiak `backups/` karpetan gordetzen dira, `kopia-YYYYMMDD-HHMMSS.db` formatuan (karpeta automatikoki sortzen da).
-
-| Ekintza | Azalpena |
-|---------|----------|
-| **+ Kopia Berria** | Uneko datu-basearen kopia sortzen du (SQLite-ren backup APIarekin, koherentzia bermatuta) |
-| **Fitxategitik Igo** | Kanpoko `.db` fitxategi bat kopia gisa gehitzen du (balioztatu egiten da) |
-| **Deskargatu** | Kopia zure ordenagailura jaisten du |
-| **Berreskuratu** | Kopiaren datuak uneko datu-basean ezartzen ditu |
-| **Ezabatu** | Kopia betiko ezabatzen du |
-
-> **Garrantzitsua:** berreskuratzeak uneko datu **guztiak** ordezkatzen ditu. Aurretik `-auto` etiketadun kopia bat sortzen da automatikoki, atzera egin ahal izateko.
-
-Balioztatzea: igotako edo berreskuratutako fitxategiak SQLite datu-base oso bat izan behar du (`integrity_check`) eta hiru taulak (`factories`, `materials`, `factory_resources`) eduki behar ditu. Bestela eragiketa bertan behera geratzen da.
-
-Kopiak eskuz ere kudea daitezke — `backups/` karpetako fitxategiak beste disko batera kopiatzea nahikoa da.
+Lehen Flask + SQLite erabiltzen zen. Logika JavaScriptera pasatu zen mugikorrean zerbitzaririk gabe erabili ahal izateko. Portea zuzena zela egiaztatzeko, `tresnak/alderatu.js`-ek bi inplementazioen erantzunak alderatzen zituen banan-banan.
 
 ---
 
@@ -185,48 +153,50 @@ Kopiak eskuz ere kudea daitezke — `backups/` karpetako fitxategiak beste disko
 
 ### Mehatxu-eredua
 
-Aplikazioa **ordenagailu bakarrean, erabiltzaile bakarrarentzat** dago pentsatuta. Ez du autentifikaziorik eta `127.0.0.1`-en soilik entzuten du — hau da, zure ordenagailuak bakarrik iritsi dezake.
+Aplikazioak ez du zerbitzaririk eta ez du daturik bidaltzen inora. Dena zure nabigatzailean geratzen da. Ez dago autentifikaziorik ez delako beharrezkoa: ez dago urrunetik atzitu daitekeen ezer.
 
-> **Garrantzitsua:** ez aldatu `host='127.0.0.1'` balioa `'0.0.0.0'`-ra autentifikazioa gehitu gabe. Hori eginez gero, zure sareko edonork datu guztiak irakurri, aldatu eta ezaba ditzake, inolako oztoporik gabe.
+Kanpotik datorren gauza bakarra **inportatzen den JSON fitxategia** da. Hori da konfiantza-muga.
 
 ### Hartutako neurriak
 
 | Neurria | Zergatik |
 |---|---|
-| **CORS gaituta EZ** | Lehen `CORS(app)` zegoen eta edozein jatorri onartzen zuen. Horrek esan nahi zuen bisitatzen zenuen **edozein webgunek** zure datuak irakurri edo fabrikak ezabatu zitzakeela `fetch` sinple batekin. Orain nabigatzaileak halako eskaerak blokeatzen ditu. Frontendak jatorri bera erabiltzen duenez, ez du CORSik behar. |
-| **Debug modua itzalita** | `debug=True`-k Werkzeug-en kontsola interaktiboa gaitzen du: errore batekin edonork Python kodea exekuta dezake. Garapenerako: `SATISFACTORY_DEBUG=1 python3 app.py` |
-| **Sarreren balioztatzea** | SQLite-k testua onartzen du zenbaki-zutabe batean. Balioztatu gabe, `amount` eremuan HTML bidal zitekeen eta gero orrian exekutatu (XSS). Orain zerbitzariak zenbaki finituak soilik onartzen ditu, eta izen/zerrenden luzerak mugatzen ditu. |
-| **Kopien edukia egiaztatzea** | Igotako `.db` bat kanpoko datua da. Lehen taulen izenak baino ez ziren egiaztatzen; orain koloreak eta kopuruak ere bai, prestatutako kopia batek koderik injektatu ez dezan. |
-| **HTML escape osoa** | Frontendak balio guztiak escapatzen ditu orrian txertatu aurretik, zenbakiak barne. |
-| **Segurtasun-goiburuak** | CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy`. CSPk datuak kanpora ateratzea eta orria iframe batean sartzea eragozten du. |
-| **Chart.js SRI-rekin** | `integrity` hash batekin kargatzen da: CDNa arriskatuz gero, nabigatzaileak fitxategia baztertzen du. |
-| **Kopien muga** | Gehienez 50 kopia; `-auto` zaharrenak automatikoki kentzen dira diskoa ez betetzeko. |
+| **Inportazioaren balioztatzea** | Fitxategi bat kanpoko datua da. Egitura, erregistro bakoitza eta erreferentzien osotasuna egiaztatzen dira: existitzen ez den fabrika aipatzen duen baliabide batek, edo kolore gisa HTML duen material batek, inportazioa bertan behera uzten dute. |
+| **HTML escape osoa** | Interfazeak balio guztiak escapatzen ditu orrian txertatu aurretik, zenbakiak barne. |
+| **CSP `<meta>` bidez** | `connect-src 'none'`: aplikazioak ezin du sarera ezer bidali. `object-src`, `base-uri`, `frame-ancestors` eta `form-action` ere itxita. |
+| **Baliabide lokalak** | Chart.js eta letra-tipoak errepositorioan daude. CDN batek ezin du kodea aldatu, eta offline funtzionatzen du. |
+| **Sarreren balioztatzea** | Zenbaki finituak soilik kopuruetan, eta izen/zerrenden luzerak mugatuta — zerbitzariak egiten zuen bezala. |
 
 ### Probak exekutatu
 
-Aldaketak egin ondoren, egiaztatu ez dela ezer hautsi:
+Nabigatzailean: **`probak.html`** ireki.
+
+Kontsolatik (Deno behar du):
 
 ```bash
-python3 -m unittest test_segurtasuna -v
+deno run --allow-read tresnak/probak-deno.js
 ```
 
-25 proba dira, konpondutako arazo bakoitzeko bat. Datu-base erreala **ez dute inoiz ukitzen**: aldi baterako karpeta bat erabiltzen dute.
+23 proba dira: balioztatzea, domeinu-logika (ordenatzea, kaskadak, id-ak) eta inportazioaren egiaztapena. Zure datuak **ez dituzte inoiz ukitzen**: probek beren egoera erabiltzen dute eta amaitzean garbitzen dute.
 
 ---
 
 ## Arazoak konpontzea
 
-**"Address already in use" errorea**
-```bash
-# 5000 portua erabiltzen duen prozesua gelditu
-sudo fuser -k 5000/tcp
-python3 app.py
-```
+**Datuak desagertu dira**
+- Nabigazio-datuak garbitzeak biltegia hustu dezake. Berreskuratzeko: **Fitxategitik Inportatu** eta azken esportazioa hautatu.
+- Prebenitzeko: esportatu aldizka. "Segurtasun Kopiak" fitxak azken esportaziotik zenbat denbora pasa den erakusten du.
 
-**Webguneak ez du erantzuten**
-- Egiaztatu terminala irekita dagoela eta `app.py` exekutatzen ari dela
-- Nabigatzailean `http://localhost:5000` idatzi (ez `https`)
+**Beste gailuko datuak ez dira agertzen**
+- Gailu bakoitzak bere datuak ditu; ez dira automatikoki sinkronizatzen. Esportatu batean eta inportatu bestean.
+- Egiaztatu bi gailuetan **helbide bera** erabiltzen duzula. Helbide desberdinek biltegi desberdinak dituzte.
 
-**Fabrikak ez dira gordetzen**
-- Egiaztatu `factories.db` fitxategia `app.py`-rekin karpeta berean dagoela
-- Terminaleko errore-mezuak irakurri diagnostikorako
+**Grafikoak ez dira agertzen**
+- `bendor/chart.umd.js` faltako da. Egiaztatu errepositorio osoa deskargatu duzula.
+
+**Aldaketak ez dira agertzen eguneratu ondoren**
+- Service worker-ak bertsio zaharra gordeta dauka. `sw.js`-ko `BERTSIOA` aldatu behar da azaleko fitxategiak aldatzean.
+- Bitartean: nabigatzailean orria berritu indarrez (Ctrl+Shift+R).
+
+**`file://` bidez irekitzean ez dabil**
+- Nabigatzaileek biltegiratzea eta service worker-ak mugatzen dituzte protokolo horretan. Erabili `python3 -m http.server 8000` edo lineako helbidea.
