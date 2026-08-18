@@ -1,0 +1,18 @@
+{
+  "name": "Satisfactory — Fabrika Kudeatzailea",
+  "short_name": "Fabrikak",
+  "description": "Satisfactory-ko fabriken eta materialen balantzearen kudeatzailea",
+  "lang": "eu",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0c0e",
+  "theme_color": "#0a0c0e",
+  "icons": [
+    { "src": "ikonoak/ikonoa-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "ikonoak/ikonoa-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "ikonoak/ikonoa-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "ikonoak/ikonoa.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

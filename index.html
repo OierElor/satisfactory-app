@@ -2,14 +2,31 @@
 <html lang="eu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0c0e">
 <title>Satisfactory — Fabrika Kudeatzailea</title>
-<!-- integrity: CDNa arriskatuz gero, nabigatzaileak fitxategia baztertzen du -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"
-        integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG"
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Zerbitzaririk ez dagoenez, CSPa hemen doa goiburuen ordez. `connect-src
+     'none'`: aplikazioak ez du sarera irteerarik behar, dena lokala baita. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
+  font-src 'self';
+  img-src 'self' data:;
+  connect-src 'none';
+  object-src 'none';
+  base-uri 'none';
+  frame-ancestors 'none';
+  form-action 'none'">
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="ikonoak/ikonoa.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="ikonoak/ikonoa-192.png">
+
+<!-- Baliabideak lokalean: offline funtzionatzeko ezinbestekoa. -->
+<script src="bendor/chart.umd.js"></script>
+<link href="bendor/letrak.css" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -160,6 +177,59 @@
 
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 2rem; }
   @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+
+  /* ---------- Mugikorra ----------
+     Aplikazioa telefonoan erabiltzeko dago pentsatuta (PWA gisa instalatuta).
+     Bereizmen txikian espazioa da baliabide urriena: tarteak murrizten dira,
+     fitxa-barra alboka mugitzen da, eta sareta guztiak zutabe bakarrera. */
+  @media (max-width: 700px) {
+    header { padding: 8px 1rem; height: auto; min-height: 56px; gap: 8px; }
+    .logo-text { font-size: 18px; letter-spacing: 1px; }
+    .logo-sub { display: none; }
+    .header-actions .btn { padding: 6px 12px; font-size: 12px; }
+
+    /* Fitxak alboka mugitzen dira, tolestu beharrean: bost fitxa ez dira
+       sartzen, eta bi lerrotan edukiaren tokia jaten dute. */
+    .tabs { padding: 0 0.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { padding: 12px 14px; font-size: 12px; letter-spacing: 1px; white-space: nowrap; }
+
+    .main { padding: 1rem; }
+    .section-title { font-size: 19px; }
+    .section-header { flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+
+    .factory-grid, .summary-grid { grid-template-columns: 1fr; }
+    .filter-bar input, .filter-bar select { min-width: 0; flex: 1 1 100%; }
+
+    /* Fabrika-txartelaren bi zutabeak (kontsumoa/ekoizpena) estuegi geratzen
+       dira: bata bestearen azpian. */
+    .resources-section { grid-template-columns: 1fr; }
+
+    /* Modala pantaila osoan: 600px finkoak ez du zentzurik telefonoan. */
+    .modal { width: 100%; max-width: 100%; max-height: 100vh; height: 100%; }
+    .modal-body { padding: 16px; }
+    .modal-header { padding: 16px 16px 12px; }
+    .modal-footer { padding: 12px 16px; }
+    .form-row { grid-template-columns: 1fr; }
+
+    /* Baliabideen editorea: izena lerro oso batean, kontrolak azpian. */
+    .res-editor-item { grid-template-columns: 1fr 90px 32px; grid-template-areas: 'izena izena izena' 'kop mota ezabatu'; }
+    .res-editor-item > input:first-child { grid-area: izena; }
+    .res-editor-item > input:nth-child(2) { grid-area: kop; }
+    .res-editor-item > .res-type-toggle { grid-area: mota; }
+    .res-editor-item > .btn-icon { grid-area: ezabatu; }
+
+    /* Taulak alboka mugitzen dira (mat-table-wrap-ek overflow-x du), baina
+       tarte txikiagoak lerro gehiago ikustea ahalbidetzen du. */
+    th, td { padding: 8px 10px; }
+  }
+
+  /* Pantaila oso estuak: telefono txikiak eta zatitutako leihoak. */
+  @media (max-width: 380px) {
+    .logo-text { font-size: 16px; }
+    .header-actions .btn { padding: 5px 10px; font-size: 11px; }
+    .main { padding: 0.75rem; }
+  }
 
   .chart-panel { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; }
   .chart-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
@@ -420,29 +490,18 @@
     <div class="section-header">
       <div class="section-title">Segurtasun Kopiak</div>
       <div style="display:flex;gap:10px">
-        <button class="btn" onclick="document.getElementById('kopia-fitxategia').click()">Fitxategitik Igo</button>
-        <button class="btn btn-primary" onclick="kopiaSortu()">+ Kopia Berria</button>
+        <button class="btn" onclick="document.getElementById('kopia-fitxategia').click()">Fitxategitik Inportatu</button>
+        <button class="btn btn-primary" onclick="datuakEsportatu()">Esportatu JSON</button>
       </div>
     </div>
-    <input type="file" id="kopia-fitxategia" accept=".db,.sqlite,.sqlite3" style="display:none" onchange="kopiaIgo(this)">
+    <input type="file" id="kopia-fitxategia" accept=".json,application/json" style="display:none" onchange="datuakInportatu(this)">
 
     <div style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;font-family:var(--font-mono)">
-      Kopiak <code>backups/</code> karpetan gordetzen dira. Berreskuratu aurretik uneko egoeraren kopia automatikoa sortzen da.
+      Datuak gailu honetako nabigatzailean gordetzen dira. Esportatu JSON fitxategi bat
+      segurtasun-kopia gisa edo beste gailu batera eramateko.
     </div>
 
-    <div class="mat-table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Fitxategia</th>
-            <th>Data</th>
-            <th>Tamaina</th>
-            <th style="text-align:right">Ekintzak</th>
-          </tr>
-        </thead>
-        <tbody id="kopia-gorputza"></tbody>
-      </table>
-    </div>
+    <div id="kopia-egoera"></div>
   </div>
 
 </main>
@@ -484,8 +543,14 @@
   </div>
 </div>
 
+<!-- Datu-geruza: balioztatzea, biltegia eta API bideratzailea. Interfazeak
+     `eskaera()` deitzen du lehen `fetch()` deitzen zuen tokietan. -->
+<script src="js/balioztatu.js"></script>
+<script src="js/biltegia.js"></script>
+<script src="js/api.js"></script>
+<script src="js/kopiak.js"></script>
+
 <script>
-const API = '';
 /* Paleta, ñabarduraren arabera ordenatuta. Lehendik zeuden bederatziak
    mantendu behar dira: materialei esleitutako koloreak balio hauek dira. */
 const KOLOREAK = [
@@ -614,13 +679,13 @@ function ikuspegiaErakutsi(izena, el) {
 }
 
 async function fabrikakKargatu() {
-  const res = await fetch(API + '/api/factories');
+  const res = await eskaera('/api/factories');
   fabrikak = await res.json();
   fabrikakErrendatu();
 }
 
 async function materialakKargatu() {
-  const res = await fetch(API + '/api/materials');
+  const res = await eskaera('/api/materials');
   materialak = await res.json();
   // Kolorea style-atributu batean txertatzen da. Zerbitzariak balioztatzen du
   // idaztean eta kopiak igotzean, baina hemen ere egiaztatzen dugu: horrela
@@ -637,12 +702,12 @@ async function materialakKargatu() {
 }
 
 async function eremuakKargatu() {
-  const res = await fetch(API + '/api/areas');
+  const res = await eskaera('/api/areas');
   eremuak = await res.json();
 }
 
 async function laburpenaKargatu() {
-  const res = await fetch(API + '/api/summary');
+  const res = await eskaera('/api/summary');
   laburpenDatuak = await res.json();
 }
 
@@ -1034,7 +1099,7 @@ function materialKoloreakErrendatu() {
 }
 
 async function materialKoloreaEzarri(id, kolorea) {
-  const res = await fetch(API + '/api/materials/' + id, {
+  const res = await eskaera('/api/materials/' + id, {
     method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ color: kolorea })
   });
   if (!res.ok) { alert('Ezin izan da kolorea gorde'); return; }
@@ -1046,7 +1111,7 @@ async function materialKoloreaEzarri(id, kolorea) {
 async function materialaEzabatu(id) {
   const m = materialak.find(x => x.id === id);
   if (!confirm('"' + m.name + '" materiala betiko ezabatu nahi duzu?')) return;
-  const res = await fetch(API + '/api/materials/' + id, { method: 'DELETE' });
+  const res = await eskaera('/api/materials/' + id, { method: 'DELETE' });
   if (!res.ok) {
     const erantzuna = await res.json();
     alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
@@ -1059,7 +1124,7 @@ async function materialaEzabatu(id) {
 async function eremuaSortu() {
   const izena = (prompt('Eremu berriaren izena:') || '').trim();
   if (!izena) return;
-  const res = await fetch(API + '/api/areas', {
+  const res = await eskaera('/api/areas', {
     method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: izena })
   });
   if (!res.ok) {
@@ -1075,7 +1140,7 @@ async function eremuaBerrizendatu(id) {
   const e = eremuak.find(x => x.id === id);
   const izena = (prompt('Eremuaren izen berria:', e.name) || '').trim();
   if (!izena || izena === e.name) return;
-  const res = await fetch(API + '/api/areas/' + id, {
+  const res = await eskaera('/api/areas/' + id, {
     method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: izena })
   });
   if (!res.ok) {
@@ -1094,7 +1159,7 @@ async function eremuaEzabatu(id) {
     ? '\n\n' + e.factory_count + ' fabrika eremurik gabe geratuko dira (ez dira ezabatzen).'
     : '';
   if (!confirm('"' + e.name + '" eremua ezabatu nahi duzu?' + oharra)) return;
-  const res = await fetch(API + '/api/areas/' + id, { method: 'DELETE' });
+  const res = await eskaera('/api/areas/' + id, { method: 'DELETE' });
   if (!res.ok) {
     const erantzuna = await res.json();
     alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
@@ -1135,8 +1200,8 @@ async function fabrikaGorde() {
   };
 
   const res = id
-    ? await fetch(API + '/api/factories/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) })
-    : await fetch(API + '/api/factories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
+    ? await eskaera('/api/factories/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) })
+    : await eskaera('/api/factories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
   if (!res.ok) {
     const erantzuna = await res.json();
     alert('Errorea: ' + (erantzuna.error || 'ezin izan da gorde'));
@@ -1152,7 +1217,7 @@ async function fabrikaGorde() {
 async function fabrikaEzabatu(id) {
   const f = fabrikak.find(x => x.id === id);
   if (!confirm('"' + f.name + '" fabrika ezabatu nahi duzu?')) return;
-  const res = await fetch(API + '/api/factories/' + id, { method: 'DELETE' });
+  const res = await eskaera('/api/factories/' + id, { method: 'DELETE' });
   if (!res.ok) {
     const erantzuna = await res.json();
     alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
@@ -1172,7 +1237,7 @@ async function fabrikaBikoiztu(id) {
       ...f.outputs.map(r => ({ material: r.name, amount: r.amount_per_min, type: 'output' })),
     ]
   };
-  const res = await fetch(API + '/api/factories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
+  const res = await eskaera('/api/factories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
   if (!res.ok) {
     const erantzuna = await res.json();
     alert('Errorea: ' + (erantzuna.error || 'ezin izan da bikoiztu'));
@@ -1196,80 +1261,48 @@ function dataFormatua(iso) {
 }
 
 async function kopiakErrendatu() {
-  const res = await fetch(API + '/api/backups');
-  const kopiak = await res.json();
-  const gorputza = document.getElementById('kopia-gorputza');
+  const e = await biltegiEgoera();
+  const iraunkorTestua = e.iraunkorra === true
+    ? '<span class="net-positive">babestuta</span>'
+    : e.iraunkorra === false
+      ? '<span class="net-negative">babestu gabe</span> — nabigatzaileak datuak ezaba litzake lekurik gabe geratzean'
+      : '<span class="net-zero">ezezaguna</span>';
 
-  if (!kopiak.length) {
-    gorputza.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">💾</div><div>Ez dago segurtasun kopiarik.<br>"+ Kopia Berria" sakatu lehena sortzeko</div></div></td></tr>';
-    return;
-  }
+  const esportazioTestua = e.azkenEsportazioa
+    ? (e.egunak === 0 ? 'gaur' : e.egunak + ' egun') + ' (' + dataFormatua(e.azkenEsportazioa) + ')'
+    : '<span class="net-negative">inoiz ez</span>';
 
-  gorputza.innerHTML = kopiak.map(k => {
-    const etiketa = k.auto
-      ? '<span class="badge" style="margin-left:8px">auto</span>'
-      : k.uploaded ? '<span class="badge" style="margin-left:8px">igoera</span>' : '';
-    return `
-      <tr>
-        <td style="color:var(--text-primary);font-family:var(--font-mono)">${esk(k.name)}${etiketa}</td>
-        <td>${dataFormatua(k.created)}</td>
-        <td class="net-zero">${tamainaFormatua(k.size)}</td>
-        <td style="text-align:right;white-space:nowrap">
-          <a class="btn btn-sm" style="text-decoration:none" href="${API}/api/backups/${encodeURIComponent(k.name)}/download">Deskargatu</a>
-          <button class="btn btn-sm" onclick="kopiaBerreskuratu('${esk(k.name)}')">Berreskuratu</button>
-          <button class="btn btn-sm btn-danger" onclick="kopiaEzabatu('${esk(k.name)}')">Ezabatu</button>
-        </td>
-      </tr>`;
-  }).join('');
-}
-
-async function kopiaSortu() {
-  const res = await fetch(API + '/api/backups', { method: 'POST' });
-  if (!res.ok) { alert('Ezin izan da kopia sortu'); return; }
-  const k = await res.json();
-  await kopiakErrendatu();
-  alert('Kopia sortuta: ' + k.name);
-}
-
-async function kopiaIgo(input) {
-  const fitxategia = input.files[0];
-  if (!fitxategia) return;
-  const datuak = new FormData();
-  datuak.append('file', fitxategia);
-  const res = await fetch(API + '/api/backups/upload', { method: 'POST', body: datuak });
-  input.value = '';
-  const erantzuna = await res.json();
-  if (!res.ok) { alert('Errorea: ' + (erantzuna.error || 'ezin izan da igo')); return; }
-  await kopiakErrendatu();
-  alert('Kopia igota: ' + erantzuna.name);
-}
-
-async function kopiaBerreskuratu(izena) {
-  if (!confirm('"' + izena + '" kopia berreskuratu nahi duzu?\n\nUneko datu guztiak ordezkatuko dira. Aurretik kopia automatiko bat sortuko da.')) return;
-  const res = await fetch(API + '/api/backups/' + izena + '/restore', { method: 'POST' });
-  const erantzuna = await res.json();
-  if (!res.ok) { alert('Errorea: ' + (erantzuna.error || 'ezin izan da berreskuratu')); return; }
-  await eremuakKargatu();
-  await materialakKargatu();
-  await fabrikakKargatu();
-  await kopiakErrendatu();
-  alert('Datuak berreskuratuta.\nAurreko egoera hemen gorde da: ' + erantzuna.safety_backup);
-}
-
-async function kopiaEzabatu(izena) {
-  if (!confirm('"' + izena + '" kopia betiko ezabatu nahi duzu?')) return;
-  const res = await fetch(API + '/api/backups/' + izena, { method: 'DELETE' });
-  if (!res.ok) {
-    const erantzuna = await res.json();
-    alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
-    return;
-  }
-  await kopiakErrendatu();
+  document.getElementById('kopia-egoera').innerHTML = `
+    <div class="mat-table-wrap">
+      <table>
+        <tbody>
+          <tr><td style="color:var(--text-primary);width:220px">Gordetako datuak</td>
+              <td class="net-zero">${e.fabrikak} fabrika · ${e.materialak} material · ${e.eremuak} eremu · ${e.baliabideak} baliabide</td></tr>
+          <tr><td style="color:var(--text-primary)">Biltegiaren tamaina</td>
+              <td class="net-zero">${tamainaFormatua(e.tamaina)}</td></tr>
+          <tr><td style="color:var(--text-primary)">Azken esportazioa</td>
+              <td class="net-zero">${esportazioTestua}</td></tr>
+          <tr><td style="color:var(--text-primary)">Biltegi iraunkorra</td>
+              <td class="net-zero">${iraunkorTestua}</td></tr>
+        </tbody>
+      </table>
+    </div>`;
 }
 
 // Koloreak eta eremuak fabrikak marraztu aurretik behar dira.
+// Service worker-a: aplikazioa offline erabiltzeko. `file://` bidez irekitzean
+// ez dago erabilgarri, eta hori ez da errorea — aplikazioak berdin funtzionatzen du.
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
 (async () => {
   materialenEgoeraKargatu();
+  // Nabigatzaileari datuak ez ezabatzeko eskatu. Erantzunak ez du abiaraztea
+  // blokeatzen: ukatuz gero, kopien fitxak abisua erakusten du.
+  iraunkortasunaEskatu().catch(() => {});
   await Promise.all([materialakKargatu(), eremuakKargatu()]);
   await fabrikakKargatu();
 })();

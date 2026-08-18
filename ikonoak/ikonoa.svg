@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Fabrika kudeatzailea">
+  <rect width="512" height="512" fill="#0a0c0e"/>
+  <!-- Goiburuko logotipoaren forma bera: gurutzea markoan -->
+  <rect x="96" y="96" width="320" height="320" fill="none" stroke="#E8A838" stroke-width="24"/>
+  <path d="M256 168 V344 M168 256 H344" stroke="#E8A838" stroke-width="24" stroke-linecap="square"/>
+</svg>
