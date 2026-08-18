@@ -162,7 +162,7 @@ def baliabideak_idatzi(db, fid, baliabideak):
     """
     db.execute("DELETE FROM factory_resources WHERE factory_id=?", (fid,))
     for res in baliabideak:
-        mat = db.execute("SELECT id FROM materials WHERE name=?", (res['material'],)).fetchone()
+        mat = db.execute("SELECT id FROM materials WHERE name=? COLLATE NOCASE", (res['material'],)).fetchone()
         if not mat:
             db.execute("INSERT INTO materials(name,unit,category,icon) VALUES(?,?,?,?)",
                        (res['material'], 'un/min', 'solid', 'box'))
@@ -181,6 +181,8 @@ def create_factory():
     try:
         if not eremua_baliozkoa(db, data.get('area_id')):
             return jsonify({'error': 'Eremua ez da aurkitu'}), 400
+        if db.execute("SELECT 1 FROM factories WHERE name=? COLLATE NOCASE", (izena,)).fetchone():
+            return jsonify({'error': '"%s" fabrika badago jada' % izena}), 409
         cur = db.execute("INSERT INTO factories(name,description,area_id) VALUES(?,?,?)",
                          (izena, deskribapena, data.get('area_id')))
         fid = cur.lastrowid
@@ -203,6 +205,8 @@ def update_factory(fid):
             return jsonify({'error': 'Fabrika ez da aurkitu'}), 404
         if not eremua_baliozkoa(db, data.get('area_id')):
             return jsonify({'error': 'Eremua ez da aurkitu'}), 400
+        if db.execute("SELECT 1 FROM factories WHERE name=? COLLATE NOCASE AND id!=?", (izena, fid)).fetchone():
+            return jsonify({'error': '"%s" fabrika badago jada' % izena}), 409
         db.execute("UPDATE factories SET name=?,description=?,area_id=? WHERE id=?",
                    (izena, deskribapena, data.get('area_id'), fid))
         baliabideak_idatzi(db, fid, baliabideak)
@@ -610,6 +614,9 @@ def eskema_sortu():
                     FOREIGN KEY(factory_id) REFERENCES factories(id) ON DELETE CASCADE,
                     FOREIGN KEY(material_id) REFERENCES materials(id)
                 );
+                CREATE INDEX IF NOT EXISTS idx_factory_resources_factory_id ON factory_resources(factory_id);
+                CREATE INDEX IF NOT EXISTS idx_factory_resources_material_id ON factory_resources(material_id);
+                CREATE INDEX IF NOT EXISTS idx_factories_area_id ON factories(area_id);
             """)
     finally:
         conn.close()

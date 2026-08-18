@@ -60,6 +60,10 @@ class Oinarria(unittest.TestCase):
     """DB garbi bat proba bakoitzeko."""
 
     def setUp(self):
+        # Beste test-fitxategi batekin batera exekutatzean (biek `app` modulu
+        # bera partekatzen dute), lehenengoaren tearDownModule-k aldi baterako
+        # karpeta ezabatu dezake honek oraindik erabili aurretik.
+        os.makedirs(os.path.dirname(aplikazioa.DB), exist_ok=True)
         if os.path.exists(aplikazioa.DB):
             os.remove(aplikazioa.DB)
         shutil.rmtree(aplikazioa.BACKUP_DIR, ignore_errors=True)

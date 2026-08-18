@@ -165,6 +165,11 @@
   .chart-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
   .chart-title::before { content: ''; width: 3px; height: 16px; background: var(--accent); display: inline-block; }
 
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-bar input, .filter-bar select { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; font-family: var(--font-body); font-size: 13px; outline: none; transition: border-color 0.15s; min-width: 220px; }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
+  .filter-bar select option { background: var(--bg-panel); }
+
   .mat-table-wrap { overflow-x: auto; }
 
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -178,6 +183,24 @@
 
   .bar-wrap { display: flex; gap: 4px; align-items: center; }
   .bar { height: 6px; border-radius: 3px; min-width: 2px; }
+
+  #material-taula th.mat-th-sort { cursor: pointer; user-select: none; transition: color 0.15s; }
+  #material-taula th.mat-th-sort:hover { color: var(--text-secondary); }
+  #material-taula th.mat-th-sort.active-sort { color: var(--accent); }
+  #material-taula th.mat-th-pin { width: 36px; }
+  #material-taula .sort-arrow { display: inline-block; margin-left: 2px; font-size: 9px; }
+
+  tr.mat-pinned td { background: var(--accent-glow); }
+  tr.mat-pinned:hover td { background: var(--accent-glow); }
+
+  #gabeziak-zerrenda { display: flex; flex-wrap: wrap; gap: 8px; }
+  .gabezia-item { display: flex; align-items: center; gap: 8px; background: var(--bg-panel); border: 1px solid var(--red); padding: 6px 12px; font-family: var(--font-mono); font-size: 12px; }
+  .gabezia-item .gabezia-izena { color: var(--text-primary); }
+  .gabezia-item .gabezia-balioa { color: var(--red); }
+
+  .pin-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 4px; line-height: 1; opacity: 0.5; filter: grayscale(1); transition: all 0.15s; }
+  .pin-btn:hover { opacity: 1; filter: grayscale(0.4); }
+  .pin-btn.active { opacity: 1; filter: grayscale(0); }
 
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
   .modal-overlay.open { display: flex; }
@@ -270,6 +293,13 @@
       <div class="section-title">Fabrika Aktiboak</div>
       <div id="fabrika-kopurua" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)"></div>
     </div>
+    <div class="filter-bar">
+      <input type="text" id="fabrika-bilaketa" placeholder="Bilatu izenagatik..." oninput="fabrikakErrendatu()">
+      <select id="fabrika-eremu-iragazkia" onchange="fabrikakErrendatu()">
+        <option value="">Eremu guztiak</option>
+      </select>
+      <button class="btn btn-sm" onclick="fabrikakEsportatuCSV()">Esportatu CSV</button>
+    </div>
     <div class="factory-grid" id="fabrika-sareta"></div>
   </div>
 
@@ -280,6 +310,11 @@
     </div>
 
     <div class="summary-grid" id="laburpen-estatistikak"></div>
+
+    <div class="chart-panel" id="gabeziak-panela" style="display:none">
+      <div class="chart-title">Gabeziak (Saldo Negatiboa)</div>
+      <div id="gabeziak-zerrenda"></div>
+    </div>
 
     <div class="charts-grid">
       <div class="chart-panel">
@@ -309,14 +344,19 @@
     <div class="section-header">
       <div class="section-title">Materialen Balantzea</div>
     </div>
+    <div class="filter-bar">
+      <input type="text" id="material-bilaketa" placeholder="Bilatu materiala..." oninput="materialTaulaErrendatu()">
+      <button class="btn btn-sm" onclick="materialakEsportatuCSV()">Esportatu CSV</button>
+    </div>
     <div class="mat-table-wrap">
       <table id="material-taula">
         <thead>
           <tr>
-            <th>Materiala</th>
-            <th>Kontsumoa</th>
-            <th>Ekoizpena</th>
-            <th>Saldo Garbia</th>
+            <th class="mat-th-pin"></th>
+            <th class="mat-th-sort" data-sort="name" onclick="materialSailkatuAldatu('name')">Materiala<span class="sort-arrow"></span></th>
+            <th class="mat-th-sort" data-sort="total_input" onclick="materialSailkatuAldatu('total_input')">Kontsumoa<span class="sort-arrow"></span></th>
+            <th class="mat-th-sort" data-sort="total_output" onclick="materialSailkatuAldatu('total_output')">Ekoizpena<span class="sort-arrow"></span></th>
+            <th class="mat-th-sort" data-sort="net" onclick="materialSailkatuAldatu('net')">Saldo Garbia<span class="sort-arrow"></span></th>
             <th>Fluxua</th>
           </tr>
         </thead>
@@ -465,10 +505,101 @@ const KOLORERIK_EZ = 'var(--text-muted)';
 let fabrikak = [], laburpenDatuak = [], unekoGrafikoak = {};
 let materialak = [], eremuak = [], materialKoloreak = {};
 
+// ---------- Materialen taula: ordenatzea eta pineatzea ----------
+let materialSailkapena = { eremua: 'name', norabidea: 'asc' };
+let pinatutakoMaterialak = new Set();
+
+function materialenEgoeraKargatu() {
+  try {
+    const sailkapena = JSON.parse(localStorage.getItem('materialak_sailkapena'));
+    if (sailkapena && sailkapena.eremua) materialSailkapena = sailkapena;
+  } catch (e) { /* ez du axola, lehenetsira itzuliko da */ }
+  try {
+    const pinatutakoak = JSON.parse(localStorage.getItem('materialak_pinatuta'));
+    if (Array.isArray(pinatutakoak)) pinatutakoMaterialak = new Set(pinatutakoak);
+  } catch (e) { /* ez du axola, hutsik hasiko da */ }
+}
+
+function materialSailkapenaGorde() {
+  localStorage.setItem('materialak_sailkapena', JSON.stringify(materialSailkapena));
+}
+
+function pinatutakoakGorde() {
+  localStorage.setItem('materialak_pinatuta', JSON.stringify([...pinatutakoMaterialak]));
+}
+
+function materialSailkatuAldatu(eremua) {
+  if (materialSailkapena.eremua === eremua) {
+    materialSailkapena.norabidea = materialSailkapena.norabidea === 'asc' ? 'desc' : 'asc';
+  } else {
+    materialSailkapena = { eremua, norabidea: eremua === 'name' ? 'asc' : 'desc' };
+  }
+  materialSailkapenaGorde();
+  materialTaulaErrendatu();
+}
+
+function materialaPinatu(izena) {
+  if (pinatutakoMaterialak.has(izena)) pinatutakoMaterialak.delete(izena);
+  else pinatutakoMaterialak.add(izena);
+  pinatutakoakGorde();
+  materialTaulaErrendatu();
+}
+
+function materialakAlderatu(a, b) {
+  const aPin = pinatutakoMaterialak.has(a.name);
+  const bPin = pinatutakoMaterialak.has(b.name);
+  if (aPin !== bPin) return aPin ? -1 : 1;
+
+  const { eremua, norabidea } = materialSailkapena;
+  let av, bv;
+  if (eremua === 'net') {
+    av = a.total_output - a.total_input;
+    bv = b.total_output - b.total_input;
+  } else {
+    av = a[eremua];
+    bv = b[eremua];
+  }
+  const emaitza = typeof av === 'string' ? av.localeCompare(bv, 'eu') : av - bv;
+  return norabidea === 'asc' ? emaitza : -emaitza;
+}
+
+function materialTauluHeaderakEguneratu() {
+  document.querySelectorAll('#material-taula th.mat-th-sort').forEach(th => {
+    const gezia = th.querySelector('.sort-arrow');
+    if (th.dataset.sort === materialSailkapena.eremua) {
+      gezia.textContent = materialSailkapena.norabidea === 'asc' ? ' ▲' : ' ▼';
+      th.classList.add('active-sort');
+    } else {
+      gezia.textContent = '';
+      th.classList.remove('active-sort');
+    }
+  });
+}
+
 function esk(testua) {
   return String(testua == null ? '' : testua).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
+}
+
+/* CSV zutabe bat: komatxo bikoitzez inguratzen du komarik, lerro-jauzirik
+   edo komatxorik badu (komatxoak bikoiztuz, RFC 4180 arabera). */
+function csvZelula(balioa) {
+  const testua = String(balioa == null ? '' : balioa);
+  return /[",\n]/.test(testua) ? '"' + testua.replace(/"/g, '""') + '"' : testua;
+}
+
+function csvDeskargatu(izena, buruak, errenkadak) {
+  const lerroak = [buruak, ...errenkadak].map(lerroa => lerroa.map(csvZelula).join(','));
+  const blob = new Blob([lerroak.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = izena;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 function ikuspegiaErakutsi(izena, el) {
@@ -515,17 +646,41 @@ async function laburpenaKargatu() {
   laburpenDatuak = await res.json();
 }
 
+function fabrikaZerrendaIragazita() {
+  const eremuIragazkia = document.getElementById('fabrika-eremu-iragazkia');
+  const aukeratutaEremua = eremuIragazkia.value;
+  eremuIragazkia.innerHTML = '<option value="">Eremu guztiak</option>' +
+    eremuak.map(e => `<option value="${e.id}">${esk(e.name)}</option>`).join('');
+  eremuIragazkia.value = aukeratutaEremua;
+
+  const bilaketa = (document.getElementById('fabrika-bilaketa').value || '').trim().toLowerCase();
+  const eremuIdIragazkia = eremuIragazkia.value;
+  return fabrikak.filter(f => {
+    if (bilaketa && !f.name.toLowerCase().includes(bilaketa) && !(f.description || '').toLowerCase().includes(bilaketa)) return false;
+    if (eremuIdIragazkia && String(f.area_id) !== eremuIdIragazkia) return false;
+    return true;
+  });
+}
+
 function fabrikakErrendatu() {
   const sareta = document.getElementById('fabrika-sareta');
   const kopurua = document.getElementById('fabrika-kopurua');
-  kopurua.textContent = fabrikak.length + ' fabrika erregistratuta';
+  const iragazitakoak = fabrikaZerrendaIragazita();
+
+  kopurua.textContent = iragazitakoak.length === fabrikak.length
+    ? fabrikak.length + ' fabrika erregistratuta'
+    : iragazitakoak.length + ' / ' + fabrikak.length + ' fabrika';
 
   if (!fabrikak.length) {
     sareta.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">🏭</div><div>Ez dago fabrikarik erregistratuta.<br>"+ Fabrika Berria" sakatu lehena sortzeko</div></div>';
     return;
   }
+  if (!iragazitakoak.length) {
+    sareta.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">🔍</div><div>Ez da fabrikarik aurkitu iragazkiarekin bat datorrenik.</div></div>';
+    return;
+  }
 
-  sareta.innerHTML = fabrikak.map(f => `
+  sareta.innerHTML = iragazitakoak.map(f => `
     <div class="factory-card">
       <div class="factory-card-accent" style="background:${fabrikarenGradientea(f)}"></div>
       <div class="factory-header">
@@ -555,10 +710,22 @@ function fabrikakErrendatu() {
       </div>
       <div class="factory-actions">
         <button class="btn btn-sm" onclick="fabrikaEditatzeko(${f.id})">Editatu</button>
+        <button class="btn btn-sm" onclick="fabrikaBikoiztu(${f.id})">Bikoiztu</button>
         <button class="btn btn-sm btn-danger" onclick="fabrikaEzabatu(${f.id})">Ezabatu</button>
       </div>
     </div>
   `).join('');
+}
+
+function fabrikakEsportatuCSV() {
+  const iragazitakoak = fabrikaZerrendaIragazita();
+  const errenkadak = [];
+  iragazitakoak.forEach(f => {
+    const baliabideak = [...f.inputs.map(r => ({...r, mota: 'Kontsumoa'})), ...f.outputs.map(r => ({...r, mota: 'Ekoizpena'}))];
+    if (!baliabideak.length) { errenkadak.push([f.name, f.area_name || '', '', '', '']); return; }
+    baliabideak.forEach(r => errenkadak.push([f.name, f.area_name || '', r.mota, r.name, r.amount_per_min]));
+  });
+  csvDeskargatu('fabrikak.csv', ['Fabrika', 'Eremua', 'Mota', 'Materiala', 'Kopurua'], errenkadak);
 }
 
 /* Kolorea definitzen duten materialak.
@@ -663,8 +830,17 @@ async function laburpenaErrendatu() {
   });
 
   const saldoDatuak = laburpenDatuak
-    .map(m => ({ name: m.name, net: m.total_output - m.total_input }))
+    .map(m => ({ name: m.name, unit: m.unit, net: m.total_output - m.total_input }))
     .sort((a, b) => b.net - a.net);
+
+  const gabeziak = saldoDatuak.filter(m => m.net < 0).sort((a, b) => a.net - b.net);
+  const gabeziakPanela = document.getElementById('gabeziak-panela');
+  gabeziakPanela.style.display = gabeziak.length ? '' : 'none';
+  document.getElementById('gabeziak-zerrenda').innerHTML = gabeziak.map(m => `
+    <div class="gabezia-item">
+      <span class="gabezia-izena">${esk(m.name)}</span>
+      <span class="gabezia-balioa">${m.net.toFixed(1)} ${esk(m.unit)}</span>
+    </div>`).join('');
 
   const ingurua = document.getElementById('grafikoa-garbia-ingurua');
   ingurua.style.height = Math.max(300, saldoDatuak.length * 32 + 60) + 'px';
@@ -696,16 +872,41 @@ function grafikoaSuntsitu(id) {
 
 async function materialakErrendatu() {
   await laburpenaKargatu();
-  const balioMax = Math.max(...laburpenDatuak.map(m => Math.max(m.total_input, m.total_output)));
+  materialTaulaErrendatu();
+}
+
+function materialZerrendaIragazita() {
+  const bilaketa = (document.getElementById('material-bilaketa').value || '').trim().toLowerCase();
+  return laburpenDatuak
+    .filter(m => !bilaketa || m.name.toLowerCase().includes(bilaketa))
+    .sort(materialakAlderatu);
+}
+
+function materialakEsportatuCSV() {
+  const zerrenda = materialZerrendaIragazita();
+  const errenkadak = zerrenda.map(m => [m.name, m.total_input.toFixed(1), m.total_output.toFixed(1), (m.total_output - m.total_input).toFixed(1), m.unit]);
+  csvDeskargatu('materialak.csv', ['Materiala', 'Kontsumoa', 'Ekoizpena', 'Saldo Garbia', 'Unitatea'], errenkadak);
+}
+
+function materialTaulaErrendatu() {
+  const zerrenda = materialZerrendaIragazita();
+  const balioMax = Math.max(1, ...laburpenDatuak.map(m => Math.max(m.total_input, m.total_output)));
   const gorputza = document.getElementById('material-gorputza');
-  gorputza.innerHTML = laburpenDatuak.map(m => {
+  if (!zerrenda.length) {
+    gorputza.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Ez da materialik aurkitu.</td></tr>';
+    materialTauluHeaderakEguneratu();
+    return;
+  }
+  gorputza.innerHTML = zerrenda.map(m => {
     const net = m.total_output - m.total_input;
     const netKlasea = net > 0 ? 'net-positive' : net < 0 ? 'net-negative' : 'net-zero';
     const netKatea = net > 0 ? '+' + net.toFixed(1) : net.toFixed(1);
     const barraKontsum = Math.round((m.total_input / balioMax) * 80);
     const barraEkoizp = Math.round((m.total_output / balioMax) * 80);
+    const pinatuta = pinatutakoMaterialak.has(m.name);
     return `
-      <tr>
+      <tr class="${pinatuta ? 'mat-pinned' : ''}">
+        <td class="mat-td-pin"><button type="button" class="pin-btn${pinatuta ? ' active' : ''}" data-material="${esk(m.name)}" title="${pinatuta ? 'Despineatu' : 'Pineatu goialdean'}">📌</button></td>
         <td style="color:var(--text-primary);font-weight:500">${esk(m.name)}</td>
         <td class="net-negative">${m.total_input > 0 ? m.total_input.toFixed(1) + ' ' + esk(m.unit) : '—'}</td>
         <td class="net-positive">${m.total_output > 0 ? m.total_output.toFixed(1) + ' ' + esk(m.unit) : '—'}</td>
@@ -718,7 +919,13 @@ async function materialakErrendatu() {
         </td>
       </tr>`;
   }).join('');
+  materialTauluHeaderakEguneratu();
 }
+
+document.getElementById('material-gorputza').addEventListener('click', (e) => {
+  const btn = e.target.closest('.pin-btn');
+  if (btn) materialaPinatu(btn.dataset.material);
+});
 
 function eremuHautatzaileaBete(hautatua) {
   document.getElementById('f-eremua').innerHTML =
@@ -887,7 +1094,12 @@ async function eremuaEzabatu(id) {
     ? '\n\n' + e.factory_count + ' fabrika eremurik gabe geratuko dira (ez dira ezabatzen).'
     : '';
   if (!confirm('"' + e.name + '" eremua ezabatu nahi duzu?' + oharra)) return;
-  await fetch(API + '/api/areas/' + id, { method: 'DELETE' });
+  const res = await fetch(API + '/api/areas/' + id, { method: 'DELETE' });
+  if (!res.ok) {
+    const erantzuna = await res.json();
+    alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
+    return;
+  }
   await eremuakKargatu();
   eremuakErrendatu();
   await fabrikakKargatu();
@@ -922,10 +1134,13 @@ async function fabrikaGorde() {
     resources: baliabideak
   };
 
-  if (id) {
-    await fetch(API + '/api/factories/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
-  } else {
-    await fetch(API + '/api/factories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
+  const res = id
+    ? await fetch(API + '/api/factories/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) })
+    : await fetch(API + '/api/factories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
+  if (!res.ok) {
+    const erantzuna = await res.json();
+    alert('Errorea: ' + (erantzuna.error || 'ezin izan da gorde'));
+    return;
   }
 
   modalaItxi();
@@ -937,7 +1152,32 @@ async function fabrikaGorde() {
 async function fabrikaEzabatu(id) {
   const f = fabrikak.find(x => x.id === id);
   if (!confirm('"' + f.name + '" fabrika ezabatu nahi duzu?')) return;
-  await fetch(API + '/api/factories/' + id, { method: 'DELETE' });
+  const res = await fetch(API + '/api/factories/' + id, { method: 'DELETE' });
+  if (!res.ok) {
+    const erantzuna = await res.json();
+    alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
+    return;
+  }
+  await fabrikakKargatu();
+}
+
+async function fabrikaBikoiztu(id) {
+  const f = fabrikak.find(x => x.id === id);
+  const datuak = {
+    name: f.name + ' (kopia)',
+    description: f.description || '',
+    area_id: f.area_id,
+    resources: [
+      ...f.inputs.map(r => ({ material: r.name, amount: r.amount_per_min, type: 'input' })),
+      ...f.outputs.map(r => ({ material: r.name, amount: r.amount_per_min, type: 'output' })),
+    ]
+  };
+  const res = await fetch(API + '/api/factories', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(datuak) });
+  if (!res.ok) {
+    const erantzuna = await res.json();
+    alert('Errorea: ' + (erantzuna.error || 'ezin izan da bikoiztu'));
+    return;
+  }
   await fabrikakKargatu();
 }
 
@@ -1018,12 +1258,18 @@ async function kopiaBerreskuratu(izena) {
 
 async function kopiaEzabatu(izena) {
   if (!confirm('"' + izena + '" kopia betiko ezabatu nahi duzu?')) return;
-  await fetch(API + '/api/backups/' + izena, { method: 'DELETE' });
+  const res = await fetch(API + '/api/backups/' + izena, { method: 'DELETE' });
+  if (!res.ok) {
+    const erantzuna = await res.json();
+    alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
+    return;
+  }
   await kopiakErrendatu();
 }
 
 // Koloreak eta eremuak fabrikak marraztu aurretik behar dira.
 (async () => {
+  materialenEgoeraKargatu();
   await Promise.all([materialakKargatu(), eremuakKargatu()]);
   await fabrikakKargatu();
 })();
