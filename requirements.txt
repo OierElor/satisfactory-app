@@ -1,7 +1,0 @@
-# Mendekotasun bakarra. Bertsioa finkatuta dago: horrela eguneratze batek ez du
-# oharkabean portaera aldatzen, eta eguneratzea erabaki kontziente bat da.
-#
-#   pip3 install -r requirements.txt --break-system-packages
-#
-# flask-cors jada EZ da behar: CORS nahita dago desgaituta (ikus README).
-flask==3.0.2

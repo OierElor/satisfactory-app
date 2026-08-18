@@ -140,12 +140,12 @@ js/kopiak.js            esportazioa eta inportazioa
 js/probak.js            proba funtzionalak
 sw.js                   service worker-a (offline)
 bendor/                 Chart.js eta letra-tipoak, lokalean
-tresnak/                migrazio- eta egiaztapen-tresnak
+tresnak/migratu.py      SQLite datu-base zahar bat JSONera bihurtzeko tresna
 ```
 
 Datuak `localStorage`-en JSON dokumentu bakar batean daude. Datu-multzoa txikia da (47 fabrikarekin ~16 KB), eta nabigatzailearen muga 5–10 MB, beraz tarte handia dago.
 
-Lehen Flask + SQLite erabiltzen zen. Logika JavaScriptera pasatu zen mugikorrean zerbitzaririk gabe erabili ahal izateko. Portea zuzena zela egiaztatzeko, `tresnak/alderatu.js`-ek bi inplementazioen erantzunak alderatzen zituen banan-banan.
+Lehen Flask + SQLite erabiltzen zen zerbitzari gisa. Logika JavaScriptera pasatu zen mugikorrean zerbitzaririk gabe erabili ahal izateko; portea Flask-en erantzunekin banan-banan alderatuta egiaztatu zen garatze-fasean.
 
 ---
 
