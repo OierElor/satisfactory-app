@@ -1,0 +1,1322 @@
+{
+  "bertsioa": 1,
+  "esportazio_data": "2026-08-18T15:16:48.295936+00:00",
+  "hurrengo_id": {
+    "areas": 12,
+    "factories": 58,
+    "materials": 61,
+    "factory_resources": 297
+  },
+  "areas": [
+    {
+      "id": 4,
+      "name": "Nagusia",
+      "created_at": "2026-08-07 12:23:35"
+    },
+    {
+      "id": 5,
+      "name": "Aluminio Laguna",
+      "created_at": "2026-08-10 12:31:43"
+    },
+    {
+      "id": 6,
+      "name": "Dunasko Desertua",
+      "created_at": "2026-08-10 12:32:43"
+    },
+    {
+      "id": 7,
+      "name": "Itsasoko Petroleoa",
+      "created_at": "2026-08-10 12:34:26"
+    },
+    {
+      "id": 8,
+      "name": "Harrizko Desertuko Petroleoa",
+      "created_at": "2026-08-10 12:34:45"
+    },
+    {
+      "id": 9,
+      "name": "Basoa Handia",
+      "created_at": "2026-08-16 17:23:37"
+    }
+  ],
+  "factories": [
+    {
+      "id": 7,
+      "name": "Plastic 1",
+      "description": "",
+      "area_id": 7,
+      "created_at": "2026-06-11 07:13:45"
+    },
+    {
+      "id": 8,
+      "name": "Rubber 1",
+      "description": "",
+      "area_id": 7,
+      "created_at": "2026-06-11 07:14:39"
+    },
+    {
+      "id": 9,
+      "name": "Copper Sheet 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:24:32"
+    },
+    {
+      "id": 10,
+      "name": "Circuit Board 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:26:19"
+    },
+    {
+      "id": 11,
+      "name": "Iron Plate 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:27:03"
+    },
+    {
+      "id": 12,
+      "name": "Wire 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:27:34"
+    },
+    {
+      "id": 13,
+      "name": "Encased Industrial Beam 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:29:21"
+    },
+    {
+      "id": 14,
+      "name": "Iron Rod 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:29:39"
+    },
+    {
+      "id": 15,
+      "name": "Modular Frame 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:30:56"
+    },
+    {
+      "id": 16,
+      "name": "Steel Beam 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:31:58"
+    },
+    {
+      "id": 17,
+      "name": "Stator 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:33:02"
+    },
+    {
+      "id": 18,
+      "name": "Motor 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:34:34"
+    },
+    {
+      "id": 19,
+      "name": "Steel Pipe 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:35:22"
+    },
+    {
+      "id": 20,
+      "name": "Rotor 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:36:48"
+    },
+    {
+      "id": 21,
+      "name": "Reinforced Iron Plate 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:38:38"
+    },
+    {
+      "id": 22,
+      "name": "Concrete 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:40:23"
+    },
+    {
+      "id": 23,
+      "name": "Heavy Modular Frame",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:43:55"
+    },
+    {
+      "id": 24,
+      "name": "High-Speed Connector 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:48:02"
+    },
+    {
+      "id": 25,
+      "name": "Computer 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:49:10"
+    },
+    {
+      "id": 26,
+      "name": "Steel Beam 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:49:52"
+    },
+    {
+      "id": 27,
+      "name": "Screws 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:50:29"
+    },
+    {
+      "id": 28,
+      "name": "Steel Pipe 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:51:32"
+    },
+    {
+      "id": 29,
+      "name": "Cable 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:52:43"
+    },
+    {
+      "id": 30,
+      "name": "Wire 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 07:53:08"
+    },
+    {
+      "id": 31,
+      "name": "Plastic 2",
+      "description": "",
+      "area_id": 8,
+      "created_at": "2026-06-11 08:10:54"
+    },
+    {
+      "id": 32,
+      "name": "Quickwire 1",
+      "description": "",
+      "area_id": 6,
+      "created_at": "2026-06-11 08:14:36"
+    },
+    {
+      "id": 33,
+      "name": "Coal 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 08:16:22"
+    },
+    {
+      "id": 34,
+      "name": "Coal 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 08:16:58"
+    },
+    {
+      "id": 35,
+      "name": "Coal 3",
+      "description": "",
+      "area_id": 6,
+      "created_at": "2026-06-11 08:18:38"
+    },
+    {
+      "id": 36,
+      "name": "Iron Rod 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 10:10:46"
+    },
+    {
+      "id": 37,
+      "name": "Screws 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 11:02:47"
+    },
+    {
+      "id": 38,
+      "name": "Copper Sheet 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-11 13:29:09"
+    },
+    {
+      "id": 39,
+      "name": "Crystal Oscillator 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-13 10:12:41"
+    },
+    {
+      "id": 40,
+      "name": "Quartz Crystal 1",
+      "description": "",
+      "area_id": 6,
+      "created_at": "2026-06-13 10:19:36"
+    },
+    {
+      "id": 41,
+      "name": "Silica 1",
+      "description": "",
+      "area_id": 6,
+      "created_at": "2026-06-13 10:21:11"
+    },
+    {
+      "id": 42,
+      "name": "Cable 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-06-13 12:43:16"
+    },
+    {
+      "id": 43,
+      "name": "Aluminum Ingot 1",
+      "description": "",
+      "area_id": 5,
+      "created_at": "2026-06-15 13:27:04"
+    },
+    {
+      "id": 44,
+      "name": "Aluminum Casing 1",
+      "description": "",
+      "area_id": 5,
+      "created_at": "2026-06-15 13:54:33"
+    },
+    {
+      "id": 45,
+      "name": "Alclad Aluminum Sheet 1",
+      "description": "",
+      "area_id": 5,
+      "created_at": "2026-06-15 13:55:32"
+    },
+    {
+      "id": 46,
+      "name": "Water 1",
+      "description": "",
+      "area_id": 5,
+      "created_at": "2026-06-15 14:09:46"
+    },
+    {
+      "id": 49,
+      "name": "Radio Control Unit 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-08-11 13:46:27"
+    },
+    {
+      "id": 50,
+      "name": "Concrete 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-08-16 09:59:50"
+    },
+    {
+      "id": 51,
+      "name": "AI Limiter 1",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-08-16 10:05:01"
+    },
+    {
+      "id": 52,
+      "name": "Silica 2",
+      "description": "",
+      "area_id": 9,
+      "created_at": "2026-08-16 10:55:07"
+    },
+    {
+      "id": 53,
+      "name": "Coal 4 & 5",
+      "description": "",
+      "area_id": 9,
+      "created_at": "2026-08-16 17:23:25"
+    },
+    {
+      "id": 54,
+      "name": "Computer 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-08-17 10:07:42"
+    },
+    {
+      "id": 55,
+      "name": "Circuit Board 2",
+      "description": "",
+      "area_id": 4,
+      "created_at": "2026-08-17 10:40:30"
+    }
+  ],
+  "materials": [
+    {
+      "id": 8,
+      "name": "Cable",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E8A838"
+    },
+    {
+      "id": 10,
+      "name": "Rotor",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 23,
+      "name": "Motor",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 25,
+      "name": "Plastic",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#B838E8"
+    },
+    {
+      "id": 26,
+      "name": "Fuel",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#B838E8"
+    },
+    {
+      "id": 27,
+      "name": "Rubber",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#B838E8"
+    },
+    {
+      "id": 28,
+      "name": "Copper Sheet",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E8A838"
+    },
+    {
+      "id": 29,
+      "name": "Circuit Board",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E8A838"
+    },
+    {
+      "id": 30,
+      "name": "Iron Plate",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#38B4E8"
+    },
+    {
+      "id": 31,
+      "name": "Wire",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E8A838"
+    },
+    {
+      "id": 32,
+      "name": "Encased Industrial Beam",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 33,
+      "name": "Steel Beam",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E83888"
+    },
+    {
+      "id": 34,
+      "name": "Concrete",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#A6763C"
+    },
+    {
+      "id": 35,
+      "name": "Iron Rod",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#38B4E8"
+    },
+    {
+      "id": 36,
+      "name": "Reinforced Iron Plate",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#38B4E8"
+    },
+    {
+      "id": 37,
+      "name": "Steel Pipe",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E83888"
+    },
+    {
+      "id": 38,
+      "name": "Modular Frame",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 39,
+      "name": "Coal",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#000000"
+    },
+    {
+      "id": 40,
+      "name": "Stator",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 41,
+      "name": "Screws",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#38B4E8"
+    },
+    {
+      "id": 42,
+      "name": "Heavy Modular Frame",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 43,
+      "name": "High-Speed Connector",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 44,
+      "name": "Quickwire",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E8D038"
+    },
+    {
+      "id": 45,
+      "name": "Computer",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 46,
+      "name": "Crystal Oscillator",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 47,
+      "name": "Quartz Crystal",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E83888"
+    },
+    {
+      "id": 48,
+      "name": "Silica",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E83888"
+    },
+    {
+      "id": 49,
+      "name": "Aluminum Ingot",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#38E8D4"
+    },
+    {
+      "id": 50,
+      "name": "Water",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#38E8D4"
+    },
+    {
+      "id": 55,
+      "name": "Alclad Aluminum Sheet",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#38E8D4"
+    },
+    {
+      "id": 56,
+      "name": "Aluminum Casing",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#38E8D4"
+    },
+    {
+      "id": 57,
+      "name": "Radio Control Unit",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 58,
+      "name": "AI Limiter",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": "#E85555"
+    },
+    {
+      "id": 59,
+      "name": "Iron Ore",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": null
+    },
+    {
+      "id": 60,
+      "name": "Alderaketa Material Berria",
+      "unit": "un/min",
+      "category": "solid",
+      "icon": "box",
+      "color": null
+    }
+  ],
+  "factory_resources": [
+    {
+      "id": 191,
+      "factory_id": 29,
+      "material_id": 8,
+      "amount_per_min": 150.0,
+      "type": "output"
+    },
+    {
+      "id": 192,
+      "factory_id": 42,
+      "material_id": 8,
+      "amount_per_min": 600.0,
+      "type": "output"
+    },
+    {
+      "id": 193,
+      "factory_id": 10,
+      "material_id": 25,
+      "amount_per_min": 180.0,
+      "type": "input"
+    },
+    {
+      "id": 194,
+      "factory_id": 10,
+      "material_id": 28,
+      "amount_per_min": 90.0,
+      "type": "input"
+    },
+    {
+      "id": 195,
+      "factory_id": 10,
+      "material_id": 29,
+      "amount_per_min": 45.0,
+      "type": "output"
+    },
+    {
+      "id": 196,
+      "factory_id": 45,
+      "material_id": 49,
+      "amount_per_min": 600.0,
+      "type": "input"
+    },
+    {
+      "id": 197,
+      "factory_id": 45,
+      "material_id": 55,
+      "amount_per_min": 600.0,
+      "type": "output"
+    },
+    {
+      "id": 198,
+      "factory_id": 44,
+      "material_id": 49,
+      "amount_per_min": 450.0,
+      "type": "input"
+    },
+    {
+      "id": 199,
+      "factory_id": 44,
+      "material_id": 56,
+      "amount_per_min": 300.0,
+      "type": "output"
+    },
+    {
+      "id": 200,
+      "factory_id": 43,
+      "material_id": 39,
+      "amount_per_min": 525.0,
+      "type": "input"
+    },
+    {
+      "id": 201,
+      "factory_id": 43,
+      "material_id": 50,
+      "amount_per_min": 1050.0,
+      "type": "input"
+    },
+    {
+      "id": 202,
+      "factory_id": 43,
+      "material_id": 48,
+      "amount_per_min": 800.0,
+      "type": "input"
+    },
+    {
+      "id": 203,
+      "factory_id": 43,
+      "material_id": 49,
+      "amount_per_min": 1050.0,
+      "type": "output"
+    },
+    {
+      "id": 204,
+      "factory_id": 33,
+      "material_id": 39,
+      "amount_per_min": 600.0,
+      "type": "output"
+    },
+    {
+      "id": 205,
+      "factory_id": 34,
+      "material_id": 39,
+      "amount_per_min": 600.0,
+      "type": "output"
+    },
+    {
+      "id": 206,
+      "factory_id": 35,
+      "material_id": 39,
+      "amount_per_min": 750.0,
+      "type": "output"
+    },
+    {
+      "id": 207,
+      "factory_id": 21,
+      "material_id": 30,
+      "amount_per_min": 187.5,
+      "type": "input"
+    },
+    {
+      "id": 208,
+      "factory_id": 21,
+      "material_id": 31,
+      "amount_per_min": 375.0,
+      "type": "input"
+    },
+    {
+      "id": 209,
+      "factory_id": 21,
+      "material_id": 36,
+      "amount_per_min": 56.25,
+      "type": "output"
+    },
+    {
+      "id": 210,
+      "factory_id": 27,
+      "material_id": 41,
+      "amount_per_min": 1000.0,
+      "type": "output"
+    },
+    {
+      "id": 211,
+      "factory_id": 20,
+      "material_id": 41,
+      "amount_per_min": 1000.0,
+      "type": "input"
+    },
+    {
+      "id": 212,
+      "factory_id": 20,
+      "material_id": 35,
+      "amount_per_min": 200.0,
+      "type": "input"
+    },
+    {
+      "id": 213,
+      "factory_id": 20,
+      "material_id": 10,
+      "amount_per_min": 40.0,
+      "type": "output"
+    },
+    {
+      "id": 214,
+      "factory_id": 12,
+      "material_id": 31,
+      "amount_per_min": 300.0,
+      "type": "output"
+    },
+    {
+      "id": 215,
+      "factory_id": 30,
+      "material_id": 31,
+      "amount_per_min": 600.0,
+      "type": "output"
+    },
+    {
+      "id": 216,
+      "factory_id": 46,
+      "material_id": 50,
+      "amount_per_min": 1200.0,
+      "type": "output"
+    },
+    {
+      "id": 217,
+      "factory_id": 28,
+      "material_id": 39,
+      "amount_per_min": 600.0,
+      "type": "input"
+    },
+    {
+      "id": 218,
+      "factory_id": 28,
+      "material_id": 37,
+      "amount_per_min": 400.0,
+      "type": "output"
+    },
+    {
+      "id": 219,
+      "factory_id": 19,
+      "material_id": 39,
+      "amount_per_min": 150.0,
+      "type": "input"
+    },
+    {
+      "id": 220,
+      "factory_id": 19,
+      "material_id": 37,
+      "amount_per_min": 100.0,
+      "type": "output"
+    },
+    {
+      "id": 221,
+      "factory_id": 26,
+      "material_id": 39,
+      "amount_per_min": 600.0,
+      "type": "input"
+    },
+    {
+      "id": 222,
+      "factory_id": 26,
+      "material_id": 33,
+      "amount_per_min": 150.0,
+      "type": "output"
+    },
+    {
+      "id": 223,
+      "factory_id": 16,
+      "material_id": 39,
+      "amount_per_min": 300.0,
+      "type": "input"
+    },
+    {
+      "id": 224,
+      "factory_id": 16,
+      "material_id": 33,
+      "amount_per_min": 75.0,
+      "type": "output"
+    },
+    {
+      "id": 225,
+      "factory_id": 17,
+      "material_id": 31,
+      "amount_per_min": 240.0,
+      "type": "input"
+    },
+    {
+      "id": 226,
+      "factory_id": 17,
+      "material_id": 37,
+      "amount_per_min": 90.0,
+      "type": "input"
+    },
+    {
+      "id": 227,
+      "factory_id": 17,
+      "material_id": 40,
+      "amount_per_min": 30.0,
+      "type": "output"
+    },
+    {
+      "id": 229,
+      "factory_id": 37,
+      "material_id": 41,
+      "amount_per_min": 1000.0,
+      "type": "output"
+    },
+    {
+      "id": 230,
+      "factory_id": 8,
+      "material_id": 27,
+      "amount_per_min": 100.0,
+      "type": "output"
+    },
+    {
+      "id": 231,
+      "factory_id": 8,
+      "material_id": 26,
+      "amount_per_min": 66.66,
+      "type": "output"
+    },
+    {
+      "id": 233,
+      "factory_id": 40,
+      "material_id": 47,
+      "amount_per_min": 180.0,
+      "type": "output"
+    },
+    {
+      "id": 234,
+      "factory_id": 31,
+      "material_id": 25,
+      "amount_per_min": 600.0,
+      "type": "output"
+    },
+    {
+      "id": 235,
+      "factory_id": 31,
+      "material_id": 26,
+      "amount_per_min": 200.0,
+      "type": "output"
+    },
+    {
+      "id": 236,
+      "factory_id": 7,
+      "material_id": 25,
+      "amount_per_min": 100.0,
+      "type": "output"
+    },
+    {
+      "id": 237,
+      "factory_id": 7,
+      "material_id": 26,
+      "amount_per_min": 33.34,
+      "type": "output"
+    },
+    {
+      "id": 238,
+      "factory_id": 18,
+      "material_id": 40,
+      "amount_per_min": 30.0,
+      "type": "input"
+    },
+    {
+      "id": 239,
+      "factory_id": 18,
+      "material_id": 10,
+      "amount_per_min": 30.0,
+      "type": "input"
+    },
+    {
+      "id": 240,
+      "factory_id": 18,
+      "material_id": 23,
+      "amount_per_min": 15.0,
+      "type": "output"
+    },
+    {
+      "id": 241,
+      "factory_id": 15,
+      "material_id": 36,
+      "amount_per_min": 20.0,
+      "type": "input"
+    },
+    {
+      "id": 242,
+      "factory_id": 15,
+      "material_id": 37,
+      "amount_per_min": 100.0,
+      "type": "input"
+    },
+    {
+      "id": 243,
+      "factory_id": 15,
+      "material_id": 38,
+      "amount_per_min": 30.0,
+      "type": "output"
+    },
+    {
+      "id": 244,
+      "factory_id": 36,
+      "material_id": 35,
+      "amount_per_min": 150.0,
+      "type": "output"
+    },
+    {
+      "id": 245,
+      "factory_id": 14,
+      "material_id": 35,
+      "amount_per_min": 150.0,
+      "type": "output"
+    },
+    {
+      "id": 246,
+      "factory_id": 11,
+      "material_id": 30,
+      "amount_per_min": 240.0,
+      "type": "output"
+    },
+    {
+      "id": 247,
+      "factory_id": 24,
+      "material_id": 44,
+      "amount_per_min": 420.0,
+      "type": "input"
+    },
+    {
+      "id": 248,
+      "factory_id": 24,
+      "material_id": 8,
+      "amount_per_min": 75.0,
+      "type": "input"
+    },
+    {
+      "id": 249,
+      "factory_id": 24,
+      "material_id": 29,
+      "amount_per_min": 7.5,
+      "type": "input"
+    },
+    {
+      "id": 250,
+      "factory_id": 24,
+      "material_id": 43,
+      "amount_per_min": 7.5,
+      "type": "output"
+    },
+    {
+      "id": 251,
+      "factory_id": 23,
+      "material_id": 38,
+      "amount_per_min": 30.0,
+      "type": "input"
+    },
+    {
+      "id": 252,
+      "factory_id": 23,
+      "material_id": 37,
+      "amount_per_min": 120.0,
+      "type": "input"
+    },
+    {
+      "id": 253,
+      "factory_id": 23,
+      "material_id": 32,
+      "amount_per_min": 30.0,
+      "type": "input"
+    },
+    {
+      "id": 254,
+      "factory_id": 23,
+      "material_id": 41,
+      "amount_per_min": 720.0,
+      "type": "input"
+    },
+    {
+      "id": 255,
+      "factory_id": 23,
+      "material_id": 42,
+      "amount_per_min": 6.0,
+      "type": "output"
+    },
+    {
+      "id": 256,
+      "factory_id": 13,
+      "material_id": 33,
+      "amount_per_min": 90.0,
+      "type": "input"
+    },
+    {
+      "id": 257,
+      "factory_id": 13,
+      "material_id": 34,
+      "amount_per_min": 180.0,
+      "type": "input"
+    },
+    {
+      "id": 258,
+      "factory_id": 13,
+      "material_id": 32,
+      "amount_per_min": 30.0,
+      "type": "output"
+    },
+    {
+      "id": 259,
+      "factory_id": 39,
+      "material_id": 8,
+      "amount_per_min": 56.0,
+      "type": "input"
+    },
+    {
+      "id": 260,
+      "factory_id": 39,
+      "material_id": 47,
+      "amount_per_min": 72.0,
+      "type": "input"
+    },
+    {
+      "id": 261,
+      "factory_id": 39,
+      "material_id": 36,
+      "amount_per_min": 10.0,
+      "type": "input"
+    },
+    {
+      "id": 262,
+      "factory_id": 39,
+      "material_id": 46,
+      "amount_per_min": 4.0,
+      "type": "output"
+    },
+    {
+      "id": 263,
+      "factory_id": 38,
+      "material_id": 28,
+      "amount_per_min": 300.0,
+      "type": "output"
+    },
+    {
+      "id": 264,
+      "factory_id": 9,
+      "material_id": 28,
+      "amount_per_min": 75.0,
+      "type": "output"
+    },
+    {
+      "id": 265,
+      "factory_id": 22,
+      "material_id": 34,
+      "amount_per_min": 200.0,
+      "type": "output"
+    },
+    {
+      "id": 266,
+      "factory_id": 25,
+      "material_id": 29,
+      "amount_per_min": 30.0,
+      "type": "input"
+    },
+    {
+      "id": 267,
+      "factory_id": 25,
+      "material_id": 8,
+      "amount_per_min": 60.0,
+      "type": "input"
+    },
+    {
+      "id": 268,
+      "factory_id": 25,
+      "material_id": 25,
+      "amount_per_min": 120.0,
+      "type": "input"
+    },
+    {
+      "id": 269,
+      "factory_id": 25,
+      "material_id": 45,
+      "amount_per_min": 7.5,
+      "type": "output"
+    },
+    {
+      "id": 271,
+      "factory_id": 32,
+      "material_id": 44,
+      "amount_per_min": 960.0,
+      "type": "output"
+    },
+    {
+      "id": 272,
+      "factory_id": 41,
+      "material_id": 48,
+      "amount_per_min": 550.0,
+      "type": "output"
+    },
+    {
+      "id": 273,
+      "factory_id": 49,
+      "material_id": 57,
+      "amount_per_min": 5.0,
+      "type": "output"
+    },
+    {
+      "id": 274,
+      "factory_id": 49,
+      "material_id": 45,
+      "amount_per_min": 5.0,
+      "type": "input"
+    },
+    {
+      "id": 275,
+      "factory_id": 49,
+      "material_id": 46,
+      "amount_per_min": 2.5,
+      "type": "input"
+    },
+    {
+      "id": 276,
+      "factory_id": 49,
+      "material_id": 56,
+      "amount_per_min": 80.0,
+      "type": "input"
+    },
+    {
+      "id": 277,
+      "factory_id": 50,
+      "material_id": 34,
+      "amount_per_min": 50.0,
+      "type": "output"
+    },
+    {
+      "id": 278,
+      "factory_id": 51,
+      "material_id": 58,
+      "amount_per_min": 25.0,
+      "type": "output"
+    },
+    {
+      "id": 279,
+      "factory_id": 51,
+      "material_id": 44,
+      "amount_per_min": 500.0,
+      "type": "input"
+    },
+    {
+      "id": 280,
+      "factory_id": 51,
+      "material_id": 28,
+      "amount_per_min": 125.0,
+      "type": "input"
+    },
+    {
+      "id": 283,
+      "factory_id": 52,
+      "material_id": 48,
+      "amount_per_min": 1500.0,
+      "type": "output"
+    },
+    {
+      "id": 284,
+      "factory_id": 53,
+      "material_id": 39,
+      "amount_per_min": 2100.0,
+      "type": "output"
+    },
+    {
+      "id": 285,
+      "factory_id": 54,
+      "material_id": 45,
+      "amount_per_min": 10.0,
+      "type": "output"
+    },
+    {
+      "id": 286,
+      "factory_id": 54,
+      "material_id": 46,
+      "amount_per_min": 5.0,
+      "type": "input"
+    },
+    {
+      "id": 287,
+      "factory_id": 54,
+      "material_id": 29,
+      "amount_per_min": 15.0,
+      "type": "input"
+    },
+    {
+      "id": 288,
+      "factory_id": 55,
+      "material_id": 29,
+      "amount_per_min": 37.5,
+      "type": "output"
+    },
+    {
+      "id": 289,
+      "factory_id": 55,
+      "material_id": 25,
+      "amount_per_min": 150.0,
+      "type": "input"
+    },
+    {
+      "id": 290,
+      "factory_id": 55,
+      "material_id": 28,
+      "amount_per_min": 75.0,
+      "type": "input"
+    }
+  ]
+}
