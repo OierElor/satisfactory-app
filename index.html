@@ -300,6 +300,8 @@
 
   .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
 
+  .desegin-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border-bright); padding: 12px 16px; display: flex; align-items: center; gap: 16px; z-index: 300; font-family: var(--font-mono); font-size: 13px; color: var(--text-primary); box-shadow: 0 4px 24px rgba(0,0,0,0.4); max-width: 90vw; }
+
   .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
   .section-title { font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 12px; }
   .section-title::before { content: ''; width: 4px; height: 24px; background: var(--accent); }
@@ -343,22 +345,24 @@
     </div>
   </div>
   <div class="header-actions">
+    <span class="badge" id="aldaketa-kontagailua" style="display:none;border-color:var(--accent);color:var(--accent)"></span>
+    <button class="btn btn-sm" id="instalatu-btn" onclick="aplikazioaInstalatu()" style="display:none">Instalatu aplikazioa</button>
     <button class="btn btn-primary" onclick="fabrikaBerriaIreki()">+ Fabrika Berria</button>
   </div>
 </header>
 
-<nav class="tabs">
-  <button class="tab active" onclick="ikuspegiaErakutsi('fabrikak', this)">Fabrikak</button>
-  <button class="tab" onclick="ikuspegiaErakutsi('laburpena', this)">Laburpen Orokorra</button>
-  <button class="tab" onclick="ikuspegiaErakutsi('materialak', this)">Materialak</button>
-  <button class="tab" onclick="ikuspegiaErakutsi('ezarpenak', this)">Ezarpenak</button>
-  <button class="tab" onclick="ikuspegiaErakutsi('kopiak', this)">Segurtasun Kopiak</button>
+<nav class="tabs" role="tablist">
+  <button class="tab active" role="tab" aria-selected="true" aria-controls="ikuspegi-fabrikak" id="fitxa-fabrikak" onclick="ikuspegiaErakutsi('fabrikak', this)">Fabrikak</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="ikuspegi-laburpena" id="fitxa-laburpena" onclick="ikuspegiaErakutsi('laburpena', this)">Laburpen Orokorra</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="ikuspegi-materialak" id="fitxa-materialak" onclick="ikuspegiaErakutsi('materialak', this)">Materialak</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="ikuspegi-ezarpenak" id="fitxa-ezarpenak" onclick="ikuspegiaErakutsi('ezarpenak', this)">Ezarpenak</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="ikuspegi-kopiak" id="fitxa-kopiak" onclick="ikuspegiaErakutsi('kopiak', this)">Segurtasun Kopiak</button>
 </nav>
 
 <main class="main">
 
   <!-- FABRIKAK -->
-  <div id="ikuspegi-fabrikak" class="view active">
+  <div id="ikuspegi-fabrikak" class="view active" role="tabpanel" aria-labelledby="fitxa-fabrikak">
     <div class="section-header">
       <div class="section-title">Fabrika Aktiboak</div>
       <div id="fabrika-kopurua" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)"></div>
@@ -374,7 +378,7 @@
   </div>
 
   <!-- LABURPENA -->
-  <div id="ikuspegi-laburpena" class="view">
+  <div id="ikuspegi-laburpena" class="view" role="tabpanel" aria-labelledby="fitxa-laburpena">
     <div class="section-header">
       <div class="section-title">Laburpen Orokorra</div>
     </div>
@@ -407,10 +411,17 @@
         <canvas id="grafikoa-garbia" role="img" aria-label="Materialen saldo garbia"></canvas>
       </div>
     </div>
+
+    <div class="chart-panel">
+      <div class="chart-title">Eremuka Banaketa</div>
+      <div style="position:relative;" id="grafikoa-eremuak-ingurua">
+        <canvas id="grafikoa-eremuak" role="img" aria-label="Kontsumoa eta ekoizpena eremuka"></canvas>
+      </div>
+    </div>
   </div>
 
   <!-- MATERIALAK -->
-  <div id="ikuspegi-materialak" class="view">
+  <div id="ikuspegi-materialak" class="view" role="tabpanel" aria-labelledby="fitxa-materialak">
     <div class="section-header">
       <div class="section-title">Materialen Balantzea</div>
     </div>
@@ -436,7 +447,7 @@
   </div>
 
   <!-- EZARPENAK -->
-  <div id="ikuspegi-ezarpenak" class="view">
+  <div id="ikuspegi-ezarpenak" class="view" role="tabpanel" aria-labelledby="fitxa-ezarpenak">
 
     <div class="settings-section">
       <div class="section-header">
@@ -486,7 +497,7 @@
   </div>
 
   <!-- SEGURTASUN KOPIAK -->
-  <div id="ikuspegi-kopiak" class="view">
+  <div id="ikuspegi-kopiak" class="view" role="tabpanel" aria-labelledby="fitxa-kopiak">
     <div class="section-header">
       <div class="section-title">Segurtasun Kopiak</div>
       <div style="display:flex;gap:10px">
@@ -502,16 +513,21 @@
     </div>
 
     <div id="kopia-egoera"></div>
+
+    <div class="section-header" style="margin-top:28px;margin-bottom:14px">
+      <div class="section-title" style="font-size:18px">Esportazio-historikoa</div>
+    </div>
+    <div id="esportazio-historia"></div>
   </div>
 
 </main>
 
 <!-- MODALA -->
 <div class="modal-overlay" id="modala" onclick="modalaItxi(event)">
-  <div class="modal" onclick="event.stopPropagation()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulua" onclick="event.stopPropagation()">
     <div class="modal-header">
       <span class="modal-title" id="modal-titulua">Fabrika Berria</span>
-      <button class="btn btn-sm" onclick="modalaItxi()">✕</button>
+      <button class="btn btn-sm" onclick="modalaItxi()" aria-label="Itxi">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="editatu-id">
@@ -541,6 +557,12 @@
       <button class="btn btn-primary" onclick="fabrikaGorde()">Gorde</button>
     </div>
   </div>
+</div>
+
+<!-- EZABATZEEN DESEGITEA -->
+<div class="desegin-toast" id="desegin-toast" role="status" style="display:none">
+  <span id="desegin-mezua"></span>
+  <button class="btn btn-sm btn-primary" onclick="desegin()">Desegin</button>
 </div>
 
 <!-- Datu-geruza: balioztatzea, biltegia eta API bideratzailea. Interfazeak
@@ -669,9 +691,10 @@ function csvDeskargatu(izena, buruak, errenkadak) {
 
 function ikuspegiaErakutsi(izena, el) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
   document.getElementById('ikuspegi-' + izena).classList.add('active');
   el.classList.add('active');
+  el.setAttribute('aria-selected', 'true');
   if (izena === 'laburpena') laburpenaErrendatu();
   if (izena === 'materialak') materialakErrendatu();
   if (izena === 'ezarpenak') ezarpenakErrendatu();
@@ -682,6 +705,7 @@ async function fabrikakKargatu() {
   const res = await eskaera('/api/factories');
   fabrikak = await res.json();
   fabrikakErrendatu();
+  aldaketakErrendatu();
 }
 
 async function materialakKargatu() {
@@ -699,11 +723,28 @@ async function materialakKargatu() {
   // Izen berriak eskuz idazten dira; iradokizunek idazketa-akatsak saihesten dituzte.
   document.getElementById('material-izenak').innerHTML =
     materialak.map(m => `<option value="${esk(m.name)}">`).join('');
+  aldaketakErrendatu();
 }
 
 async function eremuakKargatu() {
   const res = await eskaera('/api/areas');
   eremuak = await res.json();
+  aldaketakErrendatu();
+}
+
+/* "Sinkronizatu gabe" abisua: azken esportaziotik zenbat mutazio egin diren
+   erakusten du goiburuan. `...Kargatu()` funtzio guztiek deitzen dute
+   mutazio bakoitzaren ondoren berrikuspenak abiarazten dituztenez. */
+function aldaketakErrendatu() {
+  const kop = aldaketaKontagailua();
+  const gunea = document.getElementById('aldaketa-kontagailua');
+  if (!gunea) return;
+  if (kop > 0) {
+    gunea.textContent = kop + ' aldaketa esportatu gabe';
+    gunea.style.display = '';
+  } else {
+    gunea.style.display = 'none';
+  }
 }
 
 async function laburpenaKargatu() {
@@ -861,6 +902,7 @@ async function laburpenaErrendatu() {
   grafikoaSuntsitu('grafikoa-fabrikak');
   grafikoaSuntsitu('grafikoa-materialak');
   grafikoaSuntsitu('grafikoa-garbia');
+  grafikoaSuntsitu('grafikoa-eremuak');
 
   const fabrikaKoloreak = fabrikak.map(fabrikarenKoloreNagusia);
   const fabrikaEkoizpenak = fabrikak.map(f => f.outputs.reduce((a, r) => a + r.amount_per_min, 0));
@@ -929,6 +971,42 @@ async function laburpenaErrendatu() {
       }
     }
   });
+
+  // Eremuka banaketa: fabrikak area_name-z taldekatu eta baliabideak batu.
+  // "Eremurik gabe" taldea beti azkenean, materialen taularen ordena-arauari
+  // eutsiz (ikuspegi bat: eremurik gabeko fabrikak nabarmentzeko).
+  const eremuTaldeak = new Map();
+  fabrikak.forEach(f => {
+    const izena = f.area_name ?? 'Eremurik gabe';
+    if (!eremuTaldeak.has(izena)) eremuTaldeak.set(izena, { input: 0, output: 0 });
+    const t = eremuTaldeak.get(izena);
+    t.input += f.inputs.reduce((a, r) => a + r.amount_per_min, 0);
+    t.output += f.outputs.reduce((a, r) => a + r.amount_per_min, 0);
+  });
+  const eremuIzenak = [...eremuTaldeak.keys()].sort((a, b) =>
+    (a === 'Eremurik gabe') - (b === 'Eremurik gabe') || a.localeCompare(b, 'eu'));
+
+  const ingurua2 = document.getElementById('grafikoa-eremuak-ingurua');
+  ingurua2.style.height = Math.max(220, eremuIzenak.length * 40 + 60) + 'px';
+
+  unekoGrafikoak['grafikoa-eremuak'] = new Chart(document.getElementById('grafikoa-eremuak'), {
+    type: 'bar',
+    data: {
+      labels: eremuIzenak,
+      datasets: [
+        { label: 'Kontsumoa', data: eremuIzenak.map(i => eremuTaldeak.get(i).input), backgroundColor: 'rgba(232,85,85,0.7)', borderRadius: 2 },
+        { label: 'Ekoizpena', data: eremuIzenak.map(i => eremuTaldeak.get(i).output), backgroundColor: 'rgba(63,232,138,0.7)', borderRadius: 2 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { position: 'top', labels: { color: '#7a8fa0', font: { family: 'Share Tech Mono', size: 11 }, boxWidth: 12 } } },
+      scales: {
+        x: { grid: { color: '#2a3340' }, ticks: { color: '#7a8fa0', font: { family: 'Share Tech Mono', size: 10 } } },
+        y: { grid: { display: false }, ticks: { color: '#7a8fa0', font: { family: 'Share Tech Mono', size: 10 } } }
+      }
+    }
+  });
 }
 
 function grafikoaSuntsitu(id) {
@@ -971,7 +1049,7 @@ function materialTaulaErrendatu() {
     const pinatuta = pinatutakoMaterialak.has(m.name);
     return `
       <tr class="${pinatuta ? 'mat-pinned' : ''}">
-        <td class="mat-td-pin"><button type="button" class="pin-btn${pinatuta ? ' active' : ''}" data-material="${esk(m.name)}" title="${pinatuta ? 'Despineatu' : 'Pineatu goialdean'}">📌</button></td>
+        <td class="mat-td-pin"><button type="button" class="pin-btn${pinatuta ? ' active' : ''}" data-material="${esk(m.name)}" title="${pinatuta ? 'Despineatu' : 'Pineatu goialdean'}" aria-label="${esk(m.name)} ${pinatuta ? 'despineatu' : 'pineatu goialdean'}" aria-pressed="${pinatuta}">📌</button></td>
         <td style="color:var(--text-primary);font-weight:500">${esk(m.name)}</td>
         <td class="net-negative">${m.total_input > 0 ? m.total_input.toFixed(1) + ' ' + esk(m.unit) : '—'}</td>
         <td class="net-positive">${m.total_output > 0 ? m.total_output.toFixed(1) + ' ' + esk(m.unit) : '—'}</td>
@@ -1006,7 +1084,7 @@ function fabrikaBerriaIreki() {
   eremuHautatzaileaBete(null);
   document.getElementById('baliabideen-editorea').innerHTML = '';
   baliabideErrenkadaGehitu();
-  document.getElementById('modala').classList.add('open');
+  modalaIreki();
 }
 
 function fabrikaEditatzeko(id) {
@@ -1020,7 +1098,7 @@ function fabrikaEditatzeko(id) {
   ed.innerHTML = '';
   f.inputs.forEach(r => baliabideErrenkadaGehitu(r.name, r.amount_per_min, 'input'));
   f.outputs.forEach(r => baliabideErrenkadaGehitu(r.name, r.amount_per_min, 'output'));
-  document.getElementById('modala').classList.add('open');
+  modalaIreki();
 }
 
 function baliabideErrenkadaGehitu(izena='', kopurua='', mota='output') {
@@ -1034,7 +1112,7 @@ function baliabideErrenkadaGehitu(izena='', kopurua='', mota='output') {
       <button class="input-btn${mota==='input'?' active':''}" onclick="motaAldatu(this,'input')">Kontsum.</button>
       <button class="output-btn${mota==='output'?' active':''}" onclick="motaAldatu(this,'output')">Ekoizp.</button>
     </div>
-    <button class="btn-icon" onclick="this.closest('.res-editor-item').remove()">×</button>
+    <button class="btn-icon" onclick="this.closest('.res-editor-item').remove()" aria-label="Baliabidea kendu">×</button>
   `;
   ed.appendChild(errenkada);
 }
@@ -1111,6 +1189,7 @@ async function materialKoloreaEzarri(id, kolorea) {
 async function materialaEzabatu(id) {
   const m = materialak.find(x => x.id === id);
   if (!confirm('"' + m.name + '" materiala betiko ezabatu nahi duzu?')) return;
+  ezabaketaBabestu('"' + m.name + '" ezabatu da.');
   const res = await eskaera('/api/materials/' + id, { method: 'DELETE' });
   if (!res.ok) {
     const erantzuna = await res.json();
@@ -1119,6 +1198,7 @@ async function materialaEzabatu(id) {
   }
   await materialakKargatu();
   materialKoloreakErrendatu();
+  deseginToastaErakutsi();
 }
 
 async function eremuaSortu() {
@@ -1159,20 +1239,89 @@ async function eremuaEzabatu(id) {
     ? '\n\n' + e.factory_count + ' fabrika eremurik gabe geratuko dira (ez dira ezabatzen).'
     : '';
   if (!confirm('"' + e.name + '" eremua ezabatu nahi duzu?' + oharra)) return;
+  ezabaketaBabestu('"' + e.name + '" eremua ezabatu da.');
   const res = await eskaera('/api/areas/' + id, { method: 'DELETE' });
   if (!res.ok) {
     const erantzuna = await res.json();
     alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
     return;
   }
+  deseginToastaErakutsi();
   await eremuakKargatu();
   eremuakErrendatu();
   await fabrikakKargatu();
 }
 
+/* Foku-atzematea: modala irekitzean, aurreko fokua gordetzen da (ixtean
+   itzultzeko), lehen elementu fokugarrira jauzi egiten da, eta Tab/Shift+Tab
+   modalaren barruan biratzen dira, atzeko interfazera irten gabe. */
+let modalAurrekoFokua = null;
+
+function modalaIreki() {
+  modalAurrekoFokua = document.activeElement;
+  const modala = document.getElementById('modala');
+  modala.classList.add('open');
+  const lehena = modala.querySelector('.modal input, .modal select, .modal button, .modal textarea');
+  if (lehena) lehena.focus();
+  document.addEventListener('keydown', modalTekaKudeatu);
+}
+
+function modalTekaKudeatu(e) {
+  const modala = document.getElementById('modala');
+  if (!modala.classList.contains('open')) return;
+  if (e.key === 'Escape') { modalaItxi(); return; }
+  if (e.key !== 'Tab') return;
+  const fokugarriak = [...modala.querySelectorAll('.modal button, .modal input, .modal select, .modal textarea, .modal a[href]')]
+    .filter(el => !el.disabled && el.offsetParent !== null);
+  if (!fokugarriak.length) return;
+  const lehena = fokugarriak[0], azkena = fokugarriak[fokugarriak.length - 1];
+  if (e.shiftKey && document.activeElement === lehena) { e.preventDefault(); azkena.focus(); }
+  else if (!e.shiftKey && document.activeElement === azkena) { e.preventDefault(); lehena.focus(); }
+}
+
+// ---------- Ezabatzeen desegitea ----------
+// Dokumentu osoaren argazkia gordetzen da ezabatu aurretik (ez kaskada bakoitza
+// eskuz alderantzikatu — datuak txikiak dira eta hori errore-iturri bat
+// litzateke). Leiho laburra (~8s) desegiteko, gero baztertu egiten da.
+let azkenEzabaketa = null;
+let azkenEzabaketaTimeout = null;
+
+function ezabaketaBabestu(mezua) {
+  azkenEzabaketa = { dok: dokumentuaKargatu(), mezua };
+}
+
+function deseginToastaErakutsi() {
+  if (!azkenEzabaketa) return;
+  const toast = document.getElementById('desegin-toast');
+  document.getElementById('desegin-mezua').textContent = azkenEzabaketa.mezua;
+  toast.style.display = 'flex';
+  clearTimeout(azkenEzabaketaTimeout);
+  azkenEzabaketaTimeout = setTimeout(() => {
+    toast.style.display = 'none';
+    azkenEzabaketa = null;
+  }, 8000);
+}
+
+async function desegin() {
+  if (!azkenEzabaketa) return;
+  clearTimeout(azkenEzabaketaTimeout);
+  dokumentuaGorde(azkenEzabaketa.dok);
+  azkenEzabaketa = null;
+  document.getElementById('desegin-toast').style.display = 'none';
+  await materialakKargatu();
+  await eremuakKargatu();
+  await fabrikakKargatu();
+  materialKoloreakErrendatu();
+  eremuakErrendatu();
+  if (document.getElementById('ikuspegi-materialak').classList.contains('active')) materialakErrendatu();
+  if (document.getElementById('ikuspegi-laburpena').classList.contains('active')) laburpenaErrendatu();
+}
+
 function modalaItxi(event) {
   if (!event || event.target === document.getElementById('modala')) {
     document.getElementById('modala').classList.remove('open');
+    document.removeEventListener('keydown', modalTekaKudeatu);
+    if (modalAurrekoFokua) { modalAurrekoFokua.focus(); modalAurrekoFokua = null; }
   }
 }
 
@@ -1217,6 +1366,7 @@ async function fabrikaGorde() {
 async function fabrikaEzabatu(id) {
   const f = fabrikak.find(x => x.id === id);
   if (!confirm('"' + f.name + '" fabrika ezabatu nahi duzu?')) return;
+  ezabaketaBabestu('"' + f.name + '" ezabatu da.');
   const res = await eskaera('/api/factories/' + id, { method: 'DELETE' });
   if (!res.ok) {
     const erantzuna = await res.json();
@@ -1224,6 +1374,7 @@ async function fabrikaEzabatu(id) {
     return;
   }
   await fabrikakKargatu();
+  deseginToastaErakutsi();
 }
 
 async function fabrikaBikoiztu(id) {
@@ -1287,6 +1438,36 @@ async function kopiakErrendatu() {
         </tbody>
       </table>
     </div>`;
+
+  const historia = esportazioHistoria();
+  document.getElementById('esportazio-historia').innerHTML = !historia.length
+    ? '<div class="empty-state" style="padding:24px 20px"><div>Oraindik ez da esportaziorik egin.</div></div>'
+    : `
+    <div class="mat-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fitxategia</th>
+            <th>Data</th>
+            <th>Fabrikak</th>
+            <th>Materialak</th>
+            <th>Eremuak</th>
+            <th>Baliabideak</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${historia.map(h => `
+            <tr>
+              <td style="color:var(--text-primary);font-family:var(--font-mono)">${esk(h.izena)}</td>
+              <td class="net-zero">${dataFormatua(h.data)}</td>
+              <td class="net-zero">${h.fabrikak}</td>
+              <td class="net-zero">${h.materialak}</td>
+              <td class="net-zero">${h.eremuak}</td>
+              <td class="net-zero">${h.baliabideak}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 // Koloreak eta eremuak fabrikak marraztu aurretik behar dira.
@@ -1296,6 +1477,40 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
+}
+
+// ---------- Instalazio-gonbit pertsonalizatua ----------
+// Nabigatzaileak berezko mini-jakinarazpena erakutsi beharrean, gure botoi
+// propioa erakusten dugu. `beforeinstallprompt`-ek ez du iOS Safari-n inoiz
+// jaurtitzen; kasu horretan botoia ezkutuan geratzen da (ez dago hausterik).
+let atzeratutakoGonbita = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  atzeratutakoGonbita = e;
+  const btn = document.getElementById('instalatu-btn');
+  if (btn) btn.style.display = '';
+});
+
+window.addEventListener('appinstalled', () => {
+  atzeratutakoGonbita = null;
+  const btn = document.getElementById('instalatu-btn');
+  if (btn) btn.style.display = 'none';
+});
+
+async function aplikazioaInstalatu() {
+  if (!atzeratutakoGonbita) return;
+  const btn = document.getElementById('instalatu-btn');
+  await atzeratutakoGonbita.prompt();
+  atzeratutakoGonbita = null;
+  if (btn) btn.style.display = 'none';
+}
+
+// Jada instalatuta badago (standalone moduan exekutatzen ari bada), ez du
+// zentzurik "Instalatu" botoia erakusteak.
+if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+  const btn = document.getElementById('instalatu-btn');
+  if (btn) btn.style.display = 'none';
 }
 
 (async () => {

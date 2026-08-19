@@ -42,6 +42,7 @@ const putJson = (o) => ({ method: 'PUT', body: JSON.stringify(o) });
 
 function garbitu() {
   localStorage.removeItem(BILTEGI_KLABEA);
+  localStorage.removeItem(ALDAKETA_KONTAGAILUA_KLABEA);
 }
 
 // ---------- Balioztatzea ----------
@@ -276,6 +277,179 @@ proba('esportatu-inportatu itzuliak datuak mantentzen ditu', () => {
   for (const taula of TAULAK) {
     berdinak(berreskuratua[taula], esportatua[taula], taula);
   }
+});
+
+// ---------- Bat-egitea (dokumentuakBatu) ----------
+
+function dokBatuHutsa() {
+  return { bertsioa: 1, hurrengo_id: { areas: 1, factories: 1, materials: 1, factory_resources: 1 },
+           areas: [], factories: [], materials: [], factory_resources: [] };
+}
+
+proba('erregistro bera: eguneratze_data berriena irabazten da', () => {
+  const unekoa = dokBatuHutsa();
+  unekoa.factories.push({ id: 1, name: 'Zaharra', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-01 00:00:00' });
+  unekoa.hurrengo_id.factories = 2;
+
+  const inportatua = dokBatuHutsa();
+  inportatua.factories.push({ id: 1, name: 'Berria', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-02 00:00:00' });
+  inportatua.hurrengo_id.factories = 2;
+
+  const emaitza = dokumentuakBatu(unekoa, inportatua);
+  berdinak(emaitza.factories.length, 1);
+  berdinak(emaitza.factories[0].name, 'Berria');
+  berdinak(emaitza.factories[0].id, 1);
+});
+
+proba('erregistro bera: lokala berriagoa bada, lokalak irabazten du', () => {
+  const unekoa = dokBatuHutsa();
+  unekoa.factories.push({ id: 1, name: 'Lokal-berria', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-05 00:00:00' });
+  unekoa.hurrengo_id.factories = 2;
+
+  const inportatua = dokBatuHutsa();
+  inportatua.factories.push({ id: 1, name: 'Inportatu-zaharra', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-02 00:00:00' });
+  inportatua.hurrengo_id.factories = 2;
+
+  const emaitza = dokumentuakBatu(unekoa, inportatua);
+  berdinak(emaitza.factories.length, 1);
+  berdinak(emaitza.factories[0].name, 'Lokal-berria');
+});
+
+proba('id bera baina created_at desberdina: talka, biak mantentzen dira', () => {
+  const unekoa = dokBatuHutsa();
+  unekoa.factories.push({ id: 1, name: 'LokalFabrika', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-01 00:00:00' });
+  unekoa.hurrengo_id.factories = 2;
+
+  const inportatua = dokBatuHutsa();
+  inportatua.factories.push({ id: 1, name: 'InportatuFabrika', description: '', area_id: null,
+    created_at: '2026-02-01 00:00:00', eguneratze_data: '2026-02-01 00:00:00' });
+  inportatua.hurrengo_id.factories = 2;
+
+  const emaitza = dokumentuakBatu(unekoa, inportatua);
+  berdinak(emaitza.factories.length, 2, 'bi fabrika desberdin izan behar dira');
+  const izenak = emaitza.factories.map(f => f.name).sort();
+  berdinak(izenak, ['InportatuFabrika', 'LokalFabrika']);
+  // Berrizendatutako fabrikak id librea izan behar du, lokalarekin talkarik gabe.
+  const berrizendatua = emaitza.factories.find(f => f.name === 'InportatuFabrika');
+  berdinak(berrizendatua.id !== 1, true);
+  berdinak(emaitza.hurrengo_id.factories > berrizendatua.id, true);
+});
+
+proba('lokalean bakarrik edo inportatuan bakarrik dagoen erregistroa mantentzen da', () => {
+  const unekoa = dokBatuHutsa();
+  unekoa.factories.push({ id: 1, name: 'Lokala', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-01 00:00:00' });
+  unekoa.hurrengo_id.factories = 2;
+
+  const inportatua = dokBatuHutsa();
+  inportatua.factories.push({ id: 7, name: 'Inportatu-berria', description: '', area_id: null,
+    created_at: '2026-03-01 00:00:00', eguneratze_data: '2026-03-01 00:00:00' });
+  inportatua.hurrengo_id.factories = 8;
+
+  const emaitza = dokumentuakBatu(unekoa, inportatua);
+  berdinak(emaitza.factories.length, 2);
+  const izenak = emaitza.factories.map(f => f.name).sort();
+  berdinak(izenak, ['Inportatu-berria', 'Lokala']);
+});
+
+proba('materialak izenez batzen dira, id-ez ez, letra larriak alde batera', () => {
+  const unekoa = dokBatuHutsa();
+  unekoa.materials.push({ id: 1, name: 'Coal', unit: 'un/min', category: 'solid', icon: 'box', color: null,
+    eguneratze_data: '2026-01-01 00:00:00' });
+  unekoa.hurrengo_id.materials = 2;
+
+  const inportatua = dokBatuHutsa();
+  inportatua.materials.push({ id: 99, name: 'coal', unit: 'un/min', category: 'solid', icon: 'box', color: '#E8A838',
+    eguneratze_data: '2026-01-02 00:00:00' });
+  inportatua.hurrengo_id.materials = 100;
+  inportatua.factories.push({ id: 5, name: 'F-inportatua', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-01 00:00:00' });
+  inportatua.hurrengo_id.factories = 6;
+  inportatua.factory_resources.push({ id: 1, factory_id: 5, material_id: 99, amount_per_min: 10, type: 'input' });
+  inportatua.hurrengo_id.factory_resources = 2;
+
+  const emaitza = dokumentuakBatu(unekoa, inportatua);
+  berdinak(emaitza.materials.length, 1, 'material bakarra, izen bera dutelako');
+  berdinak(emaitza.materials[0].id, 1, 'lokalaren id-a mantendu behar da');
+  berdinak(emaitza.materials[0].color, '#E8A838', 'inportatutakoa berriagoa zen, kolorea eguneratu behar da');
+  // Baliabideak lokalaren material-id-ra birmapatuta egon behar dira.
+  berdinak(emaitza.factory_resources.length, 1);
+  berdinak(emaitza.factory_resources[0].material_id, 1);
+});
+
+proba('fabrika baten baliabideak irabazlearenak dira, ez bien batura', () => {
+  const unekoa = dokBatuHutsa();
+  unekoa.factories.push({ id: 1, name: 'F', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-01 00:00:00' });
+  unekoa.hurrengo_id.factories = 2;
+  unekoa.materials.push({ id: 1, name: 'Iron Ore', unit: 'un/min', category: 'solid', icon: 'box', color: null,
+    eguneratze_data: '2026-01-01 00:00:00' });
+  unekoa.hurrengo_id.materials = 2;
+  unekoa.factory_resources.push({ id: 1, factory_id: 1, material_id: 1, amount_per_min: 10, type: 'input' });
+  unekoa.hurrengo_id.factory_resources = 2;
+
+  const inportatua = dokBatuHutsa();
+  inportatua.factories.push({ id: 1, name: 'F', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-02 00:00:00' }); // berriagoa
+  inportatua.hurrengo_id.factories = 2;
+  inportatua.materials.push({ id: 1, name: 'Copper Ore', unit: 'un/min', category: 'solid', icon: 'box', color: null,
+    eguneratze_data: '2026-01-01 00:00:00' });
+  inportatua.hurrengo_id.materials = 2;
+  inportatua.factory_resources.push({ id: 1, factory_id: 1, material_id: 1, amount_per_min: 20, type: 'input' });
+  inportatua.hurrengo_id.factory_resources = 2;
+
+  const emaitza = dokumentuakBatu(unekoa, inportatua);
+  berdinak(emaitza.factory_resources.length, 1, 'ez da bi baliabideen batura izan behar');
+  berdinak(emaitza.factory_resources[0].amount_per_min, 20, 'inportatutako (berriagoaren) baliabidea izan behar du');
+  const materialak = emaitza.materials.map(m => m.name).sort();
+  berdinak(materialak, ['Copper Ore', 'Iron Ore'], 'bi materialak existitzen jarraitu behar dute, erabiltzen ez den arren');
+});
+
+proba('bat-egite ondoren hurrengo_id-ak ez du talkarik sortzen', () => {
+  const unekoa = dokBatuHutsa();
+  unekoa.factories.push({ id: 1, name: 'A', description: '', area_id: null,
+    created_at: '2026-01-01 00:00:00', eguneratze_data: '2026-01-01 00:00:00' });
+  unekoa.hurrengo_id.factories = 2;
+
+  const inportatua = dokBatuHutsa();
+  inportatua.factories.push({ id: 1, name: 'B', description: '', area_id: null,
+    created_at: '2026-02-01 00:00:00', eguneratze_data: '2026-02-01 00:00:00' }); // talka
+  inportatua.hurrengo_id.factories = 2;
+
+  const emaitza = dokumentuakBatu(unekoa, inportatua);
+  const idMax = Math.max(...emaitza.factories.map(f => f.id));
+  berdinak(emaitza.hurrengo_id.factories > idMax, true);
+});
+
+// ---------- Aldaketa-kontagailua ----------
+
+proba('mutazio arrakastatsuek kontagailua handitzen dute, irakurketek ez', async () => {
+  garbitu();
+  berdinak(aldaketaKontagailua(), 0);
+  await eskaera('/api/factories', json({ name: 'F', resources: [] }));
+  berdinak(aldaketaKontagailua(), 1);
+  await eskaera('/api/factories'); // GET, ez du handitu behar
+  berdinak(aldaketaKontagailua(), 1);
+});
+
+proba('400/404/409 erroreek ez dute kontagailua handitzen', async () => {
+  garbitu();
+  await eskaera('/api/factories', json({ name: '', resources: [] })); // 400
+  await eskaera('/api/factories/999999', putJson({ name: 'X', resources: [] })); // 404
+  berdinak(aldaketaKontagailua(), 0);
+});
+
+proba('kontagailua berrezartzeak zero balioa itzultzen du', async () => {
+  garbitu();
+  await eskaera('/api/factories', json({ name: 'F', resources: [] }));
+  berdinak(aldaketaKontagailua(), 1);
+  aldaketaKontagailuaBerrezarri();
+  berdinak(aldaketaKontagailua(), 0);
 });
 
 // ---------- HTML ihes-egitea ----------

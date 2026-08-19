@@ -43,12 +43,13 @@ Gero `http://localhost:8000` ireki. (Python-en liburutegi estandarra da; ez du e
 Gailu bakoitzeko nabigatzailean, ez zerbitzari batean. Horrek esan nahi du:
 
 - **Gailu bakoitzak bere datuak ditu.** Ez dira automatikoki sinkronizatzen.
-- **Esportatu aldizka.** "Segurtasun Kopiak" fitxan, **Esportatu JSON** botoiak fitxategi bat deskargatzen du. Hori da zure segurtasun-kopia.
+- **Esportatu aldizka.** "Segurtasun Kopiak" fitxan, **Esportatu JSON** botoiak fitxategi bat deskargatzen du (edo telefonoan zuzenean partekatzen du, nabigatzaileak onartzen badu). Hori da zure segurtasun-kopia.
+- **Goiburuan badago abisu bat** ("N aldaketa esportatu gabe") azken esportaziotik zenbat aldaketa egin diren erakusten duena.
 - **Gailuen artean mugitzeko:** esportatu batean, eta **Fitxategitik Inportatu** bestean.
 
-> **Garrantzitsua:** inportazioak datu guztiak **ordezkatu** egiten ditu; ez du bat-egiterik egiten. Bi gailuetan aldi berean editatuz gero, alde baten aldaketak galduko dira. Inportatu aurretik uneko egoera automatikoki deskargatzen da, badaezpada.
+> **Inportazioak bat egiten du, ez du dena ordezkatzen.** Erregistro bakoitzeko (fabrika, material, eremu) bertsio berriena mantentzen da; alde batean bakarrik dagoen erregistrorik ez da inoiz isilean ezabatzen. Nahi izanez gero, "dena ordezkatu" aukera ere badago, bigarren mailako aukera gisa. Inportatu aurretik uneko egoera automatikoki deskargatzen da, badaezpada.
 >
-> Nabigazio-datuak garbitzeak datuak ezaba ditzake. Aplikazioak biltegi iraunkorra eskatzen dio nabigatzaileari, eta egoera "Segurtasun Kopiak" fitxan erakusten du.
+> Nabigazio-datuak garbitzeak datuak ezaba ditzake. Aplikazioak biltegi iraunkorra eskatzen dio nabigatzaileari, eta egoera "Segurtasun Kopiak" fitxan erakusten du, esportazio-historiko batekin batera.
 
 ---
 
@@ -72,7 +73,10 @@ Gailu bakoitzeko nabigatzailean, ez zerbitzari batean. Horrek esan nahi du:
 
 Fabrika-txartelaren beheko eskuinean:
 - **"Editatu"** — datuak aldatzeko
+- **"Bikoiztu"** — antzeko fabrika bat azkar sortzeko, datu berberekin
 - **"Ezabatu"** — fabrika ezabatzeko (berrespena eskatuko du)
+
+Ezabatze bat (fabrika, material edo eremu) egin ondoren, behean "Desegin" botoi bat agertzen da segundo batzuetan — sakatuz, azken ezabatzea desegiten da.
 
 ---
 
@@ -86,10 +90,11 @@ Erregistratutako fabrika guztiak txarteletan erakusten ditu, eremuka ordenatuta.
 - Ekoizpena (berdez) — fabrikak sortzen dituen materialak minutuko
 
 ### Laburpen Orokorra
-Estatistika globalak eta hiru grafiko:
+Estatistika globalak, gabezien abisua (saldo negatiboko materialak badaude) eta lau grafiko:
 - **Ekoizpena Fabrikako** — pasteltxo-grafikoa fabrika bakoitzaren ekoizpen-proportzioarekin
 - **Material Ekoiztuenak** — barra-grafikoa top 10 materialak
 - **Saldo Garbia** — material bakoitzaren balantzea (berdea = soberakina, gorria = defizita)
+- **Eremuka Banaketa** — kontsumoa eta ekoizpena eremuka taldekatuta
 
 ### Materialak
 Taula zehatza material guztiekin:
@@ -108,7 +113,7 @@ Bi atal ditu:
 - **Materialen Koloreak** — material bakoitzari kolore bat esleitu (klik bakarrean; `×` laukiak kolorea kentzen du). Erabiltzen ez diren materialak hemen ezaba daitezke, zerrenda garbi mantentzeko.
 
 ### Segurtasun Kopiak
-Datuak JSON fitxategi batera esportatu eta handik inportatzeko fitxa. Biltegiaren egoera ere erakusten du: zenbat erregistro dauden, zenbat leku hartzen duten, azken esportaziotik zenbat denbora pasa den, eta nabigatzaileak datuak babestuta dituen. Ikusi [Datuak non gordetzen diren](#datuak-non-gordetzen-dira).
+Datuak JSON fitxategi batera esportatu (edo partekatu) eta handik inportatzeko fitxa. Biltegiaren egoera ere erakusten du: zenbat erregistro dauden, zenbat leku hartzen duten, azken esportaziotik zenbat denbora pasa den, eta nabigatzaileak datuak babestuta dituen. Azpian, esportazio-historiko bat (azken 20ak) erakusten da. Ikusi [Datuak non gordetzen diren](#datuak-non-gordetzen-dira).
 
 ---
 
@@ -177,7 +182,7 @@ Kontsolatik (Deno behar du):
 deno run --allow-read tresnak/probak-deno.js
 ```
 
-23 proba dira: balioztatzea, domeinu-logika (ordenatzea, kaskadak, id-ak) eta inportazioaren egiaztapena. Zure datuak **ez dituzte inoiz ukitzen**: probek beren egoera erabiltzen dute eta amaitzean garbitzen dute.
+33 proba dira: balioztatzea, domeinu-logika (ordenatzea, kaskadak, id-ak), inportazioaren egiaztapena, bat-egitea eta aldaketa-kontagailua. Zure datuak **ez dituzte inoiz ukitzen**: probek beren egoera erabiltzen dute eta amaitzean garbitzen dute.
 
 ---
 

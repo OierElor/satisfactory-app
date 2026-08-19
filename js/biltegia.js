@@ -32,22 +32,28 @@ function dokumentuHutsa() {
   };
 }
 
+/* `hurrengo_id`-k benetan gordetako id maximoen gainetik egon behar du beti,
+ * gordetako balioa faltako edo zaharkituta badago ere (adib. inportatutako
+ * fitxategi bat, edo eskuz editatutako JSON bat). Bestela id berriak
+ * lehendik dauden erregistroekin talka egin lezake. */
+function hurrengoIdNormalizatu(dok) {
+  const oinarria = dokumentuHutsa();
+  for (const taula of TAULAK) {
+    if (!Array.isArray(dok[taula])) dok[taula] = [];
+    oinarria.hurrengo_id[taula] = Math.max(
+      dok.hurrengo_id && dok.hurrengo_id[taula] ? dok.hurrengo_id[taula] : 1,
+      ...dok[taula].map((e) => (e.id || 0) + 1)
+    );
+  }
+  dok.hurrengo_id = oinarria.hurrengo_id;
+  return dok;
+}
+
 function dokumentuaKargatu() {
   const gordeta = localStorage.getItem(BILTEGI_KLABEA);
   if (!gordeta) return dokumentuHutsa();
   try {
-    const dok = JSON.parse(gordeta);
-    // Egitura osatugabe batek ez du aplikazioa hondatu behar: falta dena bete.
-    const oinarria = dokumentuHutsa();
-    for (const taula of TAULAK) {
-      if (!Array.isArray(dok[taula])) dok[taula] = [];
-      oinarria.hurrengo_id[taula] = Math.max(
-        dok.hurrengo_id && dok.hurrengo_id[taula] ? dok.hurrengo_id[taula] : 1,
-        ...dok[taula].map((e) => (e.id || 0) + 1)
-      );
-    }
-    dok.hurrengo_id = oinarria.hurrengo_id;
-    return dok;
+    return hurrengoIdNormalizatu(JSON.parse(gordeta));
   } catch (e) {
     // Hondatutako JSON bat isilean ez ordezkatu: erabiltzaileak jakin behar du.
     throw new ApiErrorea(500, 'Gordetako datuak ezin dira irakurri (JSON hondatua)');
@@ -130,6 +136,7 @@ function baliabideakIdatzi(dok, fid, baliabideak) {
         category: 'solid',
         icon: 'box',
         color: null,
+        eguneratze_data: oraingoData(),
       };
       dok.materials.push(mat);
     }
@@ -170,6 +177,7 @@ function fabrikaSortu(datuak) {
     description: deskribapena,
     area_id,
     created_at: oraingoData(),
+    eguneratze_data: oraingoData(),
   });
   baliabideakIdatzi(dok, fid, baliabideak);
   dokumentuaGorde(dok);
@@ -194,6 +202,7 @@ function fabrikaEguneratu(fid, datuak) {
   fabrika.name = izena;
   fabrika.description = deskribapena;
   fabrika.area_id = area_id;
+  fabrika.eguneratze_data = oraingoData();
   baliabideakIdatzi(dok, fid, baliabideak);
   dokumentuaGorde(dok);
   return { ok: true };
@@ -243,6 +252,7 @@ function materialaEguneratu(mid, datuak) {
   const materiala = dok.materials.find((m) => m.id === mid);
   if (!materiala) throw new ApiErrorea(404, 'Materiala ez da aurkitu');
   materiala.color = kolorea;
+  materiala.eguneratze_data = oraingoData();
   dokumentuaGorde(dok);
   return { ok: true };
 }
@@ -287,7 +297,8 @@ function eremuaSortu(datuak) {
     throw new ApiErrorea(409, '"' + izena + '" eremua badago jada');
   }
   const id = hurrengoId(dok, 'areas');
-  dok.areas.push({ id, name: izena, created_at: oraingoData() });
+  const orain = oraingoData();
+  dok.areas.push({ id, name: izena, created_at: orain, eguneratze_data: orain });
   dokumentuaGorde(dok);
   return { id, name: izena };
 }
@@ -301,6 +312,7 @@ function eremuaEguneratu(aid, datuak) {
   const eremua = dok.areas.find((e) => e.id === aid);
   if (!eremua) throw new ApiErrorea(404, 'Eremua ez da aurkitu');
   eremua.name = izena;
+  eremua.eguneratze_data = oraingoData();
   dokumentuaGorde(dok);
   return { ok: true };
 }

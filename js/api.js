@@ -65,6 +65,11 @@ async function eskaera(bidea, aukerak) {
         ? emaitza
         : [emaitza, 200];
       if (API_DEBUG) console.debug('[api]', metodoa, bidea, '→', egoera);
+      // Mutazio arrakastatsu bakoitzak "esportatu gabeko aldaketa" bat
+      // eransten du kontagailura (ikus js/kopiak.js). Puntu bakarra da
+      // eskaera-mota guztiek zeharkatzen dutena, beraz ez da domeinu-
+      // funtzio bakoitzean sakabanatu behar.
+      if (metodoa !== 'GET' && egoera >= 200 && egoera < 300) aldaketaKontagailuaHanditu();
       return new Erantzuna(egoera, datuak);
     } catch (e) {
       if (e instanceof ApiErrorea) {
