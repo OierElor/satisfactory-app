@@ -1187,18 +1187,25 @@ async function materialKoloreaEzarri(id, kolorea) {
 }
 
 async function materialaEzabatu(id) {
+  if (ezabaketaMartxan) return;
   const m = materialak.find(x => x.id === id);
+  if (!m) return; // jada ezabatuta / berrerrendatzeko zain
   if (!confirm('"' + m.name + '" materiala betiko ezabatu nahi duzu?')) return;
-  ezabaketaBabestu('"' + m.name + '" ezabatu da.');
-  const res = await eskaera('/api/materials/' + id, { method: 'DELETE' });
-  if (!res.ok) {
-    const erantzuna = await res.json();
-    alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
-    return;
+  ezabaketaMartxan = true;
+  try {
+    ezabaketaBabestu('"' + m.name + '" ezabatu da.');
+    const res = await eskaera('/api/materials/' + id, { method: 'DELETE' });
+    if (!res.ok) {
+      const erantzuna = await res.json();
+      alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
+      return;
+    }
+    await materialakKargatu();
+    materialKoloreakErrendatu();
+    deseginToastaErakutsi();
+  } finally {
+    ezabaketaMartxan = false;
   }
-  await materialakKargatu();
-  materialKoloreakErrendatu();
-  deseginToastaErakutsi();
 }
 
 async function eremuaSortu() {
@@ -1234,22 +1241,29 @@ async function eremuaBerrizendatu(id) {
 }
 
 async function eremuaEzabatu(id) {
+  if (ezabaketaMartxan) return;
   const e = eremuak.find(x => x.id === id);
+  if (!e) return;
   const oharra = e.factory_count
     ? '\n\n' + e.factory_count + ' fabrika eremurik gabe geratuko dira (ez dira ezabatzen).'
     : '';
   if (!confirm('"' + e.name + '" eremua ezabatu nahi duzu?' + oharra)) return;
-  ezabaketaBabestu('"' + e.name + '" eremua ezabatu da.');
-  const res = await eskaera('/api/areas/' + id, { method: 'DELETE' });
-  if (!res.ok) {
-    const erantzuna = await res.json();
-    alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
-    return;
+  ezabaketaMartxan = true;
+  try {
+    ezabaketaBabestu('"' + e.name + '" eremua ezabatu da.');
+    const res = await eskaera('/api/areas/' + id, { method: 'DELETE' });
+    if (!res.ok) {
+      const erantzuna = await res.json();
+      alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
+      return;
+    }
+    deseginToastaErakutsi();
+    await eremuakKargatu();
+    eremuakErrendatu();
+    await fabrikakKargatu();
+  } finally {
+    ezabaketaMartxan = false;
   }
-  deseginToastaErakutsi();
-  await eremuakKargatu();
-  eremuakErrendatu();
-  await fabrikakKargatu();
 }
 
 /* Foku-atzematea: modala irekitzean, aurreko fokua gordetzen da (ixtean
@@ -1285,6 +1299,13 @@ function modalTekaKudeatu(e) {
 // litzateke). Leiho laburra (~8s) desegiteko, gero baztertu egiten da.
 let azkenEzabaketa = null;
 let azkenEzabaketaTimeout = null;
+
+/* Babesa klik bikoiztuen aurka: `confirm()`+`eskaera()` artean `await` bat
+   dagoenez, DOM zaharra oraindik klikagarri geratzen da berrerrendatu arte.
+   Bigarren klik batek (erabiltzailea urduri, berehalako aldaketarik ikusi ez
+   duelako) `materialak`/`fabrikak`/`eremuak` array ZAHARRA aurkituko luke
+   oraindik, eta `confirm()` bikoiztu bat sortuko luke datu zaharrekin. */
+let ezabaketaMartxan = false;
 
 function ezabaketaBabestu(mezua) {
   azkenEzabaketa = { dok: dokumentuaKargatu(), mezua };
@@ -1364,17 +1385,24 @@ async function fabrikaGorde() {
 }
 
 async function fabrikaEzabatu(id) {
+  if (ezabaketaMartxan) return;
   const f = fabrikak.find(x => x.id === id);
+  if (!f) return;
   if (!confirm('"' + f.name + '" fabrika ezabatu nahi duzu?')) return;
-  ezabaketaBabestu('"' + f.name + '" ezabatu da.');
-  const res = await eskaera('/api/factories/' + id, { method: 'DELETE' });
-  if (!res.ok) {
-    const erantzuna = await res.json();
-    alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
-    return;
+  ezabaketaMartxan = true;
+  try {
+    ezabaketaBabestu('"' + f.name + '" ezabatu da.');
+    const res = await eskaera('/api/factories/' + id, { method: 'DELETE' });
+    if (!res.ok) {
+      const erantzuna = await res.json();
+      alert('Errorea: ' + (erantzuna.error || 'ezin izan da ezabatu'));
+      return;
+    }
+    await fabrikakKargatu();
+    deseginToastaErakutsi();
+  } finally {
+    ezabaketaMartxan = false;
   }
-  await fabrikakKargatu();
-  deseginToastaErakutsi();
 }
 
 async function fabrikaBikoiztu(id) {
