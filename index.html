@@ -452,7 +452,7 @@
     <div class="settings-section">
       <div class="section-header">
         <div class="section-title">Eremuak</div>
-        <button class="btn btn-primary btn-sm" onclick="eremuaSortu()">+ Eremu Berria</button>
+        <button class="btn btn-primary btn-sm" onclick="eremuaSortzeko()">+ Eremu Berria</button>
       </div>
       <div class="settings-hint">
         Fabrikak eremuka antolatzeko. Eremu bat ezabatzean bertako fabrikak ez dira galtzen, eremurik gabe geratzen dira.
@@ -817,7 +817,7 @@ function fabrikakErrendatu() {
       <div class="factory-actions">
         <button class="btn btn-sm" onclick="fabrikaEditatzeko(${f.id})">Editatu</button>
         <button class="btn btn-sm" onclick="fabrikaBikoiztu(${f.id})">Bikoiztu</button>
-        <button class="btn btn-sm btn-danger" onclick="fabrikaEzabatu(${f.id})">Ezabatu</button>
+        <button class="btn btn-sm btn-danger" onclick="fabrikaEzabatzeko(${f.id})">Ezabatu</button>
       </div>
     </div>
   `).join('');
@@ -1143,7 +1143,7 @@ function eremuakErrendatu() {
       <td class="net-zero">${e.factory_count}</td>
       <td style="text-align:right;white-space:nowrap">
         <button class="btn btn-sm" onclick="eremuaBerrizendatu(${e.id})">Izena aldatu</button>
-        <button class="btn btn-sm btn-danger" onclick="eremuaEzabatu(${e.id})">Ezabatu</button>
+        <button class="btn btn-sm btn-danger" onclick="eremuaEzabatzeko(${e.id})">Ezabatu</button>
       </td>
     </tr>`).join('');
 }
@@ -1170,7 +1170,7 @@ function materialKoloreakErrendatu() {
         </td>
         <td class="net-zero">${erabilita ? m.usage_count + ' fabrika' : 'erabili gabe'}</td>
         <td style="text-align:right">
-          ${erabilita ? '' : `<button class="btn btn-sm btn-danger" onclick="materialaEzabatu(${m.id})">Ezabatu</button>`}
+          ${erabilita ? '' : `<button class="btn btn-sm btn-danger" onclick="materialaEzabatzeko(${m.id})">Ezabatu</button>`}
         </td>
       </tr>`;
   }).join('');
@@ -1186,7 +1186,7 @@ async function materialKoloreaEzarri(id, kolorea) {
   fabrikakErrendatu();   // fabrika-marrak berehala eguneratu
 }
 
-async function materialaEzabatu(id) {
+async function materialaEzabatzeko(id) {
   if (ezabaketaMartxan) return;
   const m = materialak.find(x => x.id === id);
   if (!m) return; // jada ezabatuta / berrerrendatzeko zain
@@ -1208,7 +1208,7 @@ async function materialaEzabatu(id) {
   }
 }
 
-async function eremuaSortu() {
+async function eremuaSortzeko() {
   const izena = (prompt('Eremu berriaren izena:') || '').trim();
   if (!izena) return;
   const res = await eskaera('/api/areas', {
@@ -1240,7 +1240,7 @@ async function eremuaBerrizendatu(id) {
   await fabrikakKargatu();
 }
 
-async function eremuaEzabatu(id) {
+async function eremuaEzabatzeko(id) {
   if (ezabaketaMartxan) return;
   const e = eremuak.find(x => x.id === id);
   if (!e) return;
@@ -1384,7 +1384,7 @@ async function fabrikaGorde() {
   await fabrikakKargatu();
 }
 
-async function fabrikaEzabatu(id) {
+async function fabrikaEzabatzeko(id) {
   if (ezabaketaMartxan) return;
   const f = fabrikak.find(x => x.id === id);
   if (!f) return;

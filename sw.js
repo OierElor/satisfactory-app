@@ -8,7 +8,7 @@
  * bestela nabigatzaileak zaharra emango du betiko.
  */
 
-const BERTSIOA = 'v3';
+const BERTSIOA = 'v4';
 const CACHE_IZENA = 'fabrikak-' + BERTSIOA;
 
 const AZALA = [
